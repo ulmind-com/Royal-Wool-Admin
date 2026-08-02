@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 
-const empty = { code: "", type: "percent", value: 10, min_order: 0, max_discount: 0, active: true, first_order_only: false, valid_from: "", valid_until: "", description: "" };
+const empty = { code: "", type: "percent", value: 10, min_order: 0, max_discount: 0, active: true, first_order_only: false, free_shipping: false, usage_limit: 0, limit_per_user: 0, valid_from: "", valid_until: "", description: "" };
 
 export default function Coupons() {
   const [items, setItems] = useState<any[]>([]);
@@ -20,6 +20,7 @@ export default function Coupons() {
     const body = {
       ...f, code: f.code.toUpperCase(), value: Number(f.value),
       min_order: Number(f.min_order), max_discount: Number(f.max_discount),
+      usage_limit: Number(f.usage_limit), limit_per_user: Number(f.limit_per_user),
       valid_from: f.valid_from || null, valid_until: f.valid_until || null,
     };
     try {
@@ -33,6 +34,7 @@ export default function Coupons() {
     setF({
       code: c.code, type: c.type, value: c.value, min_order: c.min_order || 0,
       max_discount: c.max_discount || 0, active: c.active, first_order_only: !!c.first_order_only,
+      free_shipping: !!c.free_shipping, usage_limit: c.usage_limit || 0, limit_per_user: c.limit_per_user || 0,
       valid_from: c.valid_from || "", valid_until: c.valid_until || "", description: c.description || "",
     });
     setEditId(c.id);
@@ -67,6 +69,10 @@ export default function Coupons() {
           <div><label>Max discount ₹ (percent cap, 0 = none)</label><input type="number" value={f.max_discount} onChange={(e) => set("max_discount", e.target.value)} disabled={f.type === "flat"} /></div>
         </div>
         <div className="row">
+          <div><label>Total usage limit (0 = unlimited)</label><input type="number" value={f.usage_limit} onChange={(e) => set("usage_limit", e.target.value)} /></div>
+          <div><label>Limit per customer (0 = unlimited)</label><input type="number" value={f.limit_per_user} onChange={(e) => set("limit_per_user", e.target.value)} /></div>
+        </div>
+        <div className="row">
           <div><label>Show from (optional)</label><input type="datetime-local" value={f.valid_from} onChange={(e) => set("valid_from", e.target.value)} /></div>
           <div><label>Auto-expire at (optional)</label><input type="datetime-local" value={f.valid_until} onChange={(e) => set("valid_until", e.target.value)} /></div>
         </div>
@@ -76,6 +82,11 @@ export default function Coupons() {
           First-order only (usable only on a customer's first order)
         </label>
         <p className="muted">When on, this coupon shows and applies only for customers who haven't ordered yet. It joins the auto-apply pool, so the best offer still wins if the customer has a better one.</p>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 12 }}>
+          <input type="checkbox" checked={f.free_shipping} onChange={(e) => set("free_shipping", e.target.checked)} style={{ width: "auto", margin: 0 }} />
+          Grants Free Shipping
+        </label>
+        <p className="muted" style={{ marginBottom: 16 }}>When on, this coupon will waive the entire delivery fee for the order (highly requested for bulky yarn orders!).</p>
         <label>Description</label>
         <input value={f.description} onChange={(e) => set("description", e.target.value)} placeholder="10% off up to ₹150" />
         {err && <div className="err">{err}</div>}
@@ -84,17 +95,22 @@ export default function Coupons() {
 
       <div className="card">
         <table>
-          <thead><tr><th>Code</th><th>Discount</th><th>Min order</th><th>Window</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>Code</th><th>Discount</th><th>Min order</th><th>Limits</th><th>Window</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {items.map((c) => (
               <tr key={c.id} style={editId === c.id ? { background: "#fff6f0" } : {}}>
                 <td>
                   <b>{c.code}</b>
                   {c.first_order_only && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#F26A21", background: "#fff3eb", padding: "2px 7px", borderRadius: 6 }}>1st order</span>}
+                  {c.free_shipping && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 600, color: "#10b981", background: "#ecfdf5", padding: "2px 7px", borderRadius: 6 }}>Free Ship</span>}
                   <div className="muted">{c.description}</div>
                 </td>
                 <td>{c.type === "percent" ? `${c.value}%${c.max_discount ? ` (max ₹${c.max_discount})` : ""}` : `₹${c.value}`}</td>
                 <td>{c.min_order ? `₹${c.min_order}` : "—"}</td>
+                <td>
+                  <div style={{ fontSize: 13 }}>Per user: {c.limit_per_user || "∞"}</div>
+                  <div style={{ fontSize: 13 }}>Total: {c.used_count || 0} / {c.usage_limit || "∞"}</div>
+                </td>
                 <td className="muted">{c.valid_from ? new Date(c.valid_from).toLocaleDateString() : "—"} → {c.valid_until ? new Date(c.valid_until).toLocaleDateString() : "∞"}</td>
                 <td><button className="btn ghost sm" onClick={() => toggle(c)}>{c.active ? "Active ✓" : "Inactive"}</button></td>
                 <td className="flex">
@@ -103,7 +119,7 @@ export default function Coupons() {
                 </td>
               </tr>
             ))}
-            {items.length === 0 && <tr><td colSpan={6} className="muted">No coupons yet.</td></tr>}
+            {items.length === 0 && <tr><td colSpan={7} className="muted">No coupons yet.</td></tr>}
           </tbody>
         </table>
       </div>

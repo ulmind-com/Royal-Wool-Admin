@@ -157,9 +157,14 @@ export default function Settings() {
           lng: s.shop.lng === "" ? null : Number(s.shop.lng),
         },
         delivery: {
-          free_radius_km: Number(s.delivery.free_radius_km), per_km_rate: Number(s.delivery.per_km_rate),
-          base_fee: Number(s.delivery.base_fee), free_above: Number(s.delivery.free_above),
-          max_service_km: Number(s.delivery.max_service_km), slabs: s.delivery.slabs || [],
+          free_above: Number(s.delivery.free_above || 0),
+          home_state: s.delivery.home_state || "West Bengal",
+          home_base_fee: Number(s.delivery.home_base_fee || 0),
+          home_base_weight_kg: Number(s.delivery.home_base_weight_kg || 1),
+          home_extra_fee_per_kg: Number(s.delivery.home_extra_fee_per_kg || 0),
+          rest_base_fee: Number(s.delivery.rest_base_fee || 0),
+          rest_base_weight_kg: Number(s.delivery.rest_base_weight_kg || 1),
+          rest_extra_fee_per_kg: Number(s.delivery.rest_extra_fee_per_kg || 0),
         },
       };
       const res = await api.put("/settings", body);
@@ -321,19 +326,32 @@ export default function Settings() {
       </div>
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Delivery rules</h3>
-        <div className="row">
-          <div><label>Free radius (km)</label><input type="number" value={s.delivery.free_radius_km} onChange={(e) => setDel("free_radius_km", e.target.value)} /></div>
-          <div><label>Rate per km (beyond free radius)</label><input type="number" value={s.delivery.per_km_rate} onChange={(e) => setDel("per_km_rate", e.target.value)} /></div>
+        <h3 style={{ marginTop: 0 }}>Pan-India Delivery Rules</h3>
+        
+        <div style={{ marginBottom: 24 }}>
+          <h4 style={{ margin: "0 0 8px 0" }}>Home State Pricing</h4>
+          <div className="row">
+            <div><label>Home State Name</label><input value={s.delivery.home_state || ""} placeholder="West Bengal" onChange={(e) => setDel("home_state", e.target.value)} /></div>
+            <div><label>Free delivery above order value ₹</label><input type="number" value={s.delivery.free_above} onChange={(e) => setDel("free_above", e.target.value)} /></div>
+          </div>
+          <div className="row">
+            <div><label>Base fee ₹</label><input type="number" value={s.delivery.home_base_fee} onChange={(e) => setDel("home_base_fee", e.target.value)} /></div>
+            <div><label>Up to weight (Kg)</label><input type="number" value={s.delivery.home_base_weight_kg} onChange={(e) => setDel("home_base_weight_kg", e.target.value)} /></div>
+            <div><label>Extra fee per additional Kg ₹</label><input type="number" value={s.delivery.home_extra_fee_per_kg} onChange={(e) => setDel("home_extra_fee_per_kg", e.target.value)} /></div>
+          </div>
         </div>
-        <div className="row">
-          <div><label>Base fee (beyond free radius)</label><input type="number" value={s.delivery.base_fee} onChange={(e) => setDel("base_fee", e.target.value)} /></div>
-          <div><label>Free delivery above order value</label><input type="number" value={s.delivery.free_above} onChange={(e) => setDel("free_above", e.target.value)} /></div>
-          <div><label>Max serviceable distance (km)</label><input type="number" value={s.delivery.max_service_km} onChange={(e) => setDel("max_service_km", e.target.value)} /></div>
+
+        <div>
+          <h4 style={{ margin: "0 0 8px 0" }}>Rest of India Pricing</h4>
+          <div className="row">
+            <div><label>Base fee ₹</label><input type="number" value={s.delivery.rest_base_fee} onChange={(e) => setDel("rest_base_fee", e.target.value)} /></div>
+            <div><label>Up to weight (Kg)</label><input type="number" value={s.delivery.rest_base_weight_kg} onChange={(e) => setDel("rest_base_weight_kg", e.target.value)} /></div>
+            <div><label>Extra fee per additional Kg ₹</label><input type="number" value={s.delivery.rest_extra_fee_per_kg} onChange={(e) => setDel("rest_extra_fee_per_kg", e.target.value)} /></div>
+          </div>
         </div>
-        <p className="muted">
-          Example: within {s.delivery.free_radius_km} km → free. Beyond that → ₹{s.delivery.base_fee} + ₹{s.delivery.per_km_rate} × total km
-          (e.g. 10 km → ₹{Number(s.delivery.base_fee) + Number(s.delivery.per_km_rate) * 10}). Orders above ₹{s.delivery.free_above} ship free. No delivery beyond {s.delivery.max_service_km} km.
+        
+        <p className="muted" style={{ marginTop: 16 }}>
+          Example: In {s.delivery.home_state || "Home State"}, up to {s.delivery.home_base_weight_kg || 1}Kg costs ₹{s.delivery.home_base_fee || 0}. Every additional Kg costs ₹{s.delivery.home_extra_fee_per_kg || 0}.
         </p>
       </div>
 
