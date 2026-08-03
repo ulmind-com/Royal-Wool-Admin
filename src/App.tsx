@@ -18,6 +18,8 @@ import Returns from "./pages/Returns";
 import Reviews from "./pages/Reviews";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
+import Waitlist from "./pages/Waitlist";
+import Analytics from "./pages/Analytics";
 
 function Guard({ children }: { children: React.ReactNode }) {
   return isAdmin() ? <>{children}</> : <Navigate to="/login" replace />;
@@ -41,6 +43,8 @@ export default function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/banners" element={<Banners />} />
         <Route path="/combos" element={<Combos />} />
+        <Route path="/waitlist" element={<Waitlist />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/orders" element={<Orders />} />

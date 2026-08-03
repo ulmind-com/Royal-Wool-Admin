@@ -145,9 +145,9 @@ export default function Combos() {
               <button className="btn ghost" onClick={deselectAllFiltered}>Deselect All</button>
             </div>
             
-            <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid #333", borderRadius: 8, padding: 12, background: "#1e1e2e" }}>
+            <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid #e5e5e5", borderRadius: 8, padding: 12, background: "#fafafa" }}>
               {filteredProducts.map(p => (
-                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", cursor: "pointer", borderBottom: "1px solid #2a2a3a" }}>
+                <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", cursor: "pointer", borderBottom: "1px solid #f0f0f0" }}>
                   <input 
                     type="checkbox" 
                     checked={f.product_ids.includes(p.id)} 
