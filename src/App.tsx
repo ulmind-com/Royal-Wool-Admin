@@ -3,6 +3,7 @@ import { isAdmin } from "./auth";
 import Layout from "./components/Layout";
 import Banners from "./pages/Banners";
 import Categories from "./pages/Categories";
+import Combos from "./pages/Combos";
 import Coupons from "./pages/Coupons";
 import Dashboard from "./pages/Dashboard";
 import HomeLayout from "./pages/HomeLayout";
@@ -39,6 +40,7 @@ export default function App() {
         <Route path="/products/:id" element={<ProductEditor />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/banners" element={<Banners />} />
+        <Route path="/combos" element={<Combos />} />
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/orders" element={<Orders />} />

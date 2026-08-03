@@ -8,6 +8,7 @@ const links = [
   { to: "/banners", label: "Banners / Offers" },
   { to: "/home-layout", label: "Home Layout" },
   { to: "/media", label: "Media" },
+  { to: "/combos", label: "Combos (Bundles)" },
   { to: "/coupons", label: "Coupons" },
   { to: "/notifications", label: "Notifications" },
   { to: "/orders", label: "Orders" },
@@ -24,7 +25,7 @@ export default function Layout() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div className="brand">Clothing<span>.</span>Admin</div>
+        <div className="brand">Royaall<span>.</span>Wool</div>
         <nav className="nav">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end}>
