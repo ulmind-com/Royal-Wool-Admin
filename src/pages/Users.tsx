@@ -154,6 +154,7 @@ export default function Users() {
             <tr>
               <th>Customer</th><th>Phone</th><th>Role</th>
               <th onClick={() => handleSort("joined")} style={{ cursor: "pointer", userSelect: "none" }}>Joined {sortBy.startsWith("joined") ? (sortBy.endsWith("desc") ? "↓" : "↑") : ""}</th>
+              <th>In Cart</th>
               <th onClick={() => handleSort("orders")} style={{ cursor: "pointer", userSelect: "none" }}>Orders {sortBy.startsWith("orders") ? (sortBy.endsWith("desc") ? "↓" : "↑") : ""}</th>
               <th onClick={() => handleSort("spent")} style={{ cursor: "pointer", userSelect: "none" }}>Spent {sortBy.startsWith("spent") ? (sortBy.endsWith("desc") ? "↓" : "↑") : ""}</th>
               <th>COD</th><th></th>
@@ -166,7 +167,7 @@ export default function Users() {
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       {u.avatar ? (
-                        <img src={u.avatar} alt="Avatar" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                        <img src={u.avatar} alt="Avatar" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid #ddd" }} />
                       ) : (
                         <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f1f5f9", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, flexShrink: 0 }}>
                           {(u.name?.[0] || u.email?.[0] || "?").toUpperCase()}
@@ -181,7 +182,12 @@ export default function Users() {
                   <td>{u.phone || <span className="muted">—</span>}</td>
                   <td>{rolePill(u.role)}</td>
                   <td className="muted">{fmtDate(u.created_at)}</td>
-                  <td>{u.orders_count}</td>
+                  <td>
+                    <span style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "12px", background: u.cart_count > 0 ? "#fff3e0" : "#f5f5f5", color: u.cart_count > 0 ? "#e65100" : '#888', fontWeight: 600 }}>
+                      {u.cart_count || 0} items
+                    </span>
+                  </td>
+                  <td><b>{u.orders_count}</b></td>
                   <td><b>{money(u.total_spent)}</b></td>
                   <td>
                     {u.cod_blocked ? (
@@ -206,7 +212,7 @@ export default function Users() {
                 </tr>
                 {open === u.id && (
                   <tr key={u.id + "d"}>
-                    <td colSpan={8} style={{ background: "#faf9f8" }}>
+                    <td colSpan={9} style={{ background: "#faf9f8" }}>
                       <div className="detailwrap">
                         <div className="section-title">Account</div>
                         <div className="pdetail">
@@ -238,6 +244,25 @@ export default function Users() {
                                 <span className="v">
                                   {[a.house, a.area, a.city, a.state, a.pincode].filter(Boolean).join(", ") || "—"}
                                   {a.phone ? ` · ${a.phone}` : ""}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="section-title" style={{ marginTop: 14 }}>Active Cart Items ({(u.cart_items || []).length})</div>
+                        {(u.cart_items || []).length === 0 ? (
+                          <span className="muted">No items currently in cart.</span>
+                        ) : (
+                          <div className="pdetail" style={{ background: "#fff", padding: "8px 12px", borderRadius: "8px", border: "1px solid #eaeaea" }}>
+                            {(u.cart_items || []).map((c: any, i: number) => (
+                              <div className="kv" key={i} style={{ padding: "6px 0", borderBottom: i < (u.cart_items || []).length - 1 ? "1px solid #f0f0f0" : "none" }}>
+                                <span className="k" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  {c.image && <img src={c.image} style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} alt="" />}
+                                  <b>{c.title || "Product"}</b> ({c.qty}x)
+                                </span>
+                                <span className="v">
+                                  {c.color ? `Color: ${c.color}` : ""} {c.size ? `· Size: ${c.size}` : ""} · <b>{money((c.price || 0) * (c.qty || 1))}</b>
                                 </span>
                               </div>
                             ))}
@@ -302,8 +327,8 @@ export default function Users() {
                 )}
               </>
             ))}
-            {!loading && processedRows.length === 0 && <tr><td colSpan={8} className="muted">No users found.</td></tr>}
-            {loading && <tr><td colSpan={8} className="muted">Loading…</td></tr>}
+            {!loading && processedRows.length === 0 && <tr><td colSpan={9} className="muted">No users found.</td></tr>}
+            {loading && <tr><td colSpan={9} className="muted">Loading…</td></tr>}
           </tbody>
         </table>
       </div>
