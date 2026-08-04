@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Waitlist from "./pages/Waitlist";
 import Analytics from "./pages/Analytics";
+import Invoice from "./pages/Invoice";
 
 function Guard({ children }: { children: React.ReactNode }) {
   return isAdmin() ? <>{children}</> : <Navigate to="/login" replace />;
@@ -29,6 +30,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/orders/:id/invoice" element={<Guard><Invoice /></Guard>} />
       <Route
         element={
           <Guard>
