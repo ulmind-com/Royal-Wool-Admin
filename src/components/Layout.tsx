@@ -12,11 +12,7 @@ const links = [
   { to: "/users", label: "Customers" },
   { to: "/reviews", label: "Product Reviews" },
   { to: "/coupons", label: "Discount Codes" },
-  { to: "/banners", label: "Promotional Banners" },
-  { to: "/home-layout", label: "Mobile App Layout" },
-  { to: "/notifications", label: "Push Notifications" },
-  { to: "/returns", label: "Return Requests" },
-  { to: "/refunds", label: "Refund Requests" },
+  { to: "/home-layout", label: "Web Layout" },
   { to: "/media", label: "Photo Library" },
   { to: "/settings", label: "Store Settings" },
 ];
