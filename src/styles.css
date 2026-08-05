@@ -16,9 +16,15 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Layout */
 .shell { display: flex; min-height: 100vh; }
-.sidebar { width: 230px; background: var(--dark); color: #fff; padding: 22px 14px; position: sticky; top: 0; height: 100vh; }
-.brand { font-size: 20px; font-weight: 800; padding: 0 10px 20px; }
+/* Column layout so a long nav scrolls inside the rail instead of being clipped. */
+.sidebar { width: 230px; flex: none; background: var(--dark); color: #fff; padding: 22px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; min-height: 0; }
+.brand { flex: none; font-size: 20px; font-weight: 800; padding: 0 10px 20px; }
 .brand span { color: var(--orange); }
+.nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
+.nav::-webkit-scrollbar { width: 6px; }
+.nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 999px; }
+.nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.32); }
+.nav::-webkit-scrollbar-track { background: transparent; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; color: #cfc8c2; font-weight: 500; margin-bottom: 4px; }
 .nav a.active, .nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
 .nav a.active { background: var(--orange); color: #fff; }
