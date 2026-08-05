@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { isAdmin } from "./auth";
 import Layout from "./components/Layout";
-import Banners from "./pages/Banners";
 import Categories from "./pages/Categories";
 import Combos from "./pages/Combos";
 import Coupons from "./pages/Coupons";
@@ -9,7 +8,6 @@ import Dashboard from "./pages/Dashboard";
 import HomeLayout from "./pages/HomeLayout";
 import Login from "./pages/Login";
 import Media from "./pages/Media";
-import Notifications from "./pages/Notifications";
 import Orders from "./pages/Orders";
 import ProductEditor from "./pages/ProductEditor";
 import Products from "./pages/Products";
@@ -41,12 +39,10 @@ export default function App() {
         <Route path="/products/new" element={<ProductEditor />} />
         <Route path="/products/:id" element={<ProductEditor />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/banners" element={<Banners />} />
         <Route path="/combos" element={<Combos />} />
         <Route path="/waitlist" element={<Waitlist />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/coupons" element={<Coupons />} />
-        <Route path="/notifications" element={<Notifications />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/users" element={<Users />} />
         <Route path="/home-layout" element={<HomeLayout />} />
