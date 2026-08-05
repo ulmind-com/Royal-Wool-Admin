@@ -13,8 +13,6 @@ import Notifications from "./pages/Notifications";
 import Orders from "./pages/Orders";
 import ProductEditor from "./pages/ProductEditor";
 import Products from "./pages/Products";
-import Refunds from "./pages/Refunds";
-import Returns from "./pages/Returns";
 import Reviews from "./pages/Reviews";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
@@ -51,8 +49,6 @@ export default function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/refunds" element={<Refunds />} />
-        <Route path="/returns" element={<Returns />} />
         <Route path="/home-layout" element={<HomeLayout />} />
         <Route path="/media" element={<Media />} />
         <Route path="/reviews" element={<Reviews />} />

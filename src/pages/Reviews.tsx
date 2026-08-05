@@ -14,6 +14,9 @@ type Review = {
   helpful_count?: number;
   unhelpful_count?: number;
   created_at: string;
+  admin_reply?: string;
+  admin_reply_at?: string;
+  is_hidden?: boolean;
 };
 
 function Star({ filled }: { filled: boolean }) {
@@ -53,6 +56,8 @@ export default function Reviews() {
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<string>("");
   const [minStars, setMinStars] = useState<number>(0);
+  const [replyModal, setReplyModal] = useState<{ id: string, text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     api
@@ -61,6 +66,33 @@ export default function Reviews() {
       .catch(() => setReviews([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const saveReply = async () => {
+    if (!replyModal || !replyModal.text.trim()) return;
+    setBusy(true);
+    try {
+      const res = await api.patch(`/reviews/admin/${replyModal.id}/reply`, { text: replyModal.text });
+      setReviews(prev => prev.map(r => r.id === replyModal.id ? { ...r, admin_reply: res.admin_reply, admin_reply_at: res.admin_reply_at } : r));
+      setReplyModal(null);
+    } catch (e) {
+      alert("Failed to save reply");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleStatus = async (r: Review) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await api.patch(`/reviews/admin/${r.id}/status`, { is_hidden: !r.is_hidden });
+      setReviews(prev => prev.map(x => x.id === r.id ? { ...x, is_hidden: res.is_hidden } : x));
+    } catch (e) {
+      alert("Failed to update status");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const products = useMemo(() => {
     const map = new Map<string, string>();
@@ -111,6 +143,7 @@ export default function Reviews() {
         <table>
           <thead>
             <tr>
+              <th>Status</th>
               <th>Product</th>
               <th>Customer</th>
               <th>Rating</th>
@@ -122,7 +155,21 @@ export default function Reviews() {
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.id}>
+              <tr key={r.id} style={{ opacity: r.is_hidden ? 0.6 : 1, transition: "opacity 0.2s" }}>
+                <td>
+                  <button 
+                    onClick={() => toggleStatus(r)}
+                    disabled={busy}
+                    style={{
+                      background: r.is_hidden ? "#fef2f2" : "#f0fdf4",
+                      color: r.is_hidden ? "#991b1b" : "#166534",
+                      border: `1px solid ${r.is_hidden ? "#fecaca" : "#bbf7d0"}`,
+                      padding: "4px 8px", borderRadius: 12, fontSize: 11, fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+                    }}
+                  >
+                    {r.is_hidden ? "Hidden" : "Published"}
+                  </button>
+                </td>
                 <td style={{ maxWidth: 160 }}>{r.product_title}</td>
                 <td>{r.user_name}</td>
                 <td><Stars value={r.rating} /></td>
@@ -134,6 +181,21 @@ export default function Reviews() {
                       {r.tags.map((t) => (
                         <span key={t} className="pill" style={{ background: "#FFF3EB", color: "#F26A21" }}>{t}</span>
                       ))}
+                    </div>
+                  )}
+                  {r.admin_reply ? (
+                    <div style={{ marginTop: 12, padding: 12, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <b style={{ color: "#166534", fontSize: 13 }}>Seller Response</b>
+                        <button className="btn ghost sm" style={{ padding: "0 4px", height: 24, fontSize: 12 }} onClick={() => setReplyModal({ id: r.id, text: r.admin_reply || "" })}>Edit</button>
+                      </div>
+                      <div style={{ fontSize: 13, color: "#15803d", whiteSpace: "pre-wrap" }}>{r.admin_reply}</div>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 8 }}>
+                      <button className="btn ghost sm" style={{ padding: "0 8px", height: 28, fontSize: 13, background: "#f8fafc", border: "1px solid #e2e8f0" }} onClick={() => setReplyModal({ id: r.id, text: "" })}>
+                        💬 Reply to Customer
+                      </button>
                     </div>
                   )}
                 </td>
@@ -159,14 +221,35 @@ export default function Reviews() {
               </tr>
             ))}
             {!loading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="muted">No reviews yet.</td></tr>
+              <tr><td colSpan={8} className="muted">No reviews yet.</td></tr>
             )}
             {loading && (
-              <tr><td colSpan={7} className="muted">Loading…</td></tr>
+              <tr><td colSpan={8} className="muted">Loading…</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {replyModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+          <div className="card" style={{ width: 400, padding: 24 }}>
+            <h3>Reply to {reviews.find(r => r.id === replyModal.id)?.user_name}</h3>
+            <p className="muted" style={{ marginBottom: 16 }}>This response will be visible publicly on the product page.</p>
+            <textarea
+              value={replyModal.text}
+              onChange={e => setReplyModal({ ...replyModal, text: e.target.value })}
+              placeholder="e.g. Hi, thanks for your feedback..."
+              style={{ width: "100%", height: 120, resize: "none", marginBottom: 16 }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="btn ghost" disabled={busy} onClick={() => setReplyModal(null)}>Cancel</button>
+              <button className="btn primary" disabled={busy || !replyModal.text.trim()} onClick={saveReply}>
+                {busy ? "Saving..." : "Save Reply"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -15,8 +15,6 @@ const links = [
   { to: "/banners", label: "Promotional Banners" },
   { to: "/home-layout", label: "Mobile App Layout" },
   { to: "/notifications", label: "Push Notifications" },
-  { to: "/returns", label: "Return Requests" },
-  { to: "/refunds", label: "Refund Requests" },
   { to: "/media", label: "Photo Library" },
   { to: "/settings", label: "Store Settings" },
 ];
