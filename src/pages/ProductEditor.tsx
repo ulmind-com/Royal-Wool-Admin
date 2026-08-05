@@ -15,6 +15,7 @@ const empty = {
   title: "", description: "", short_description: "", tags: [] as string[], brand: "", category_id: "",
   mrp: 0, price: 0, discount_pct: 0, discount_on: "price",
   cgst: "" as number | string, sgst: "" as number | string, igst: "" as number | string,
+  primary_color_name: "", primary_color_hex: "#000000", primary_color_family: "",
   images: [] as string[], colors: [] as Variant[],
   product_line: "",
   
@@ -25,7 +26,6 @@ const empty = {
   sku: "", shipping_weight: "" as number | string, country_of_origin: "",
   stock: 0, low_stock_threshold: 5,
   rating: 0, review_count: 0, sold_count: 0, is_active: true, is_featured: false,
-  returnable: true, return_days: 0,
 };
 
 export default function ProductEditor() {
@@ -111,6 +111,9 @@ export default function ProductEditor() {
       short_description: f.short_description || null,
       tags: f.tags,
       category_id: f.category_id || null,
+      primary_color_name: f.primary_color_name || null,
+      primary_color_hex: f.primary_color_hex || null,
+      primary_color_family: f.primary_color_family || null,
       mrp: Number(f.mrp), price: Number(f.price), discount_pct: Number(f.discount_pct),
       cgst: f.cgst === "" ? null : Number(f.cgst),
       sgst: f.sgst === "" ? null : Number(f.sgst),
@@ -155,6 +158,60 @@ export default function ProductEditor() {
           onChange={(e) => set("tags", e.target.value.split(",").map(t => t.trim()).filter(Boolean))} 
           placeholder="e.g. winter, soft, baby-safe" 
         />
+        <div className="row" style={{ marginTop: 16 }}>
+          <div>
+            <label>Primary Color Family</label>
+            <select value={f.primary_color_family || ""} onChange={(e) => set("primary_color_family", e.target.value)}>
+              <option value="">— select —</option>
+              <optgroup label="Neutrals & Earth Tones">
+                <option value="Black">Black</option>
+                <option value="White">White</option>
+                <option value="Grey / Silver">Grey / Silver</option>
+                <option value="Cream / Ivory">Cream / Ivory</option>
+                <option value="Beige / Khaki">Beige / Khaki</option>
+                <option value="Brown">Brown</option>
+              </optgroup>
+              <optgroup label="Primary & Secondary">
+                <option value="Red">Red</option>
+                <option value="Blue">Blue</option>
+                <option value="Yellow">Yellow</option>
+                <option value="Green">Green</option>
+                <option value="Orange">Orange</option>
+                <option value="Purple / Violet">Purple / Violet</option>
+              </optgroup>
+              <optgroup label="Fashion & Blends">
+                <option value="Pink">Pink</option>
+                <option value="Burgundy / Maroon">Burgundy / Maroon</option>
+                <option value="Navy">Navy</option>
+                <option value="Teal / Aqua">Teal / Aqua</option>
+                <option value="Peach / Coral">Peach / Coral</option>
+                <option value="Mustard">Mustard</option>
+                <option value="Olive">Olive</option>
+                <option value="Plum">Plum</option>
+              </optgroup>
+              <optgroup label="Yarn Specials">
+                <option value="Multi / Variegated">Multi / Variegated</option>
+                <option value="Speckled">Speckled</option>
+                <option value="Heathered">Heathered</option>
+                <option value="Natural / Undyed">Natural / Undyed</option>
+                <option value="Gradient / Ombre">Gradient / Ombre</option>
+                <option value="Metallic">Metallic</option>
+                <option value="Neon">Neon</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label>Primary Color Name</label>
+            <input value={f.primary_color_name} onChange={(e) => set("primary_color_name", e.target.value)} placeholder="e.g. Azure Blue" />
+          </div>
+          <div>
+            <label>Primary Color Hex</label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="color" value={f.primary_color_hex || "#000000"} onChange={(e) => set("primary_color_hex", e.target.value)} style={{ height: 44, width: 44, padding: 0, cursor: "pointer", border: "none" }} />
+              <div className="muted">{f.primary_color_hex || "#000000"}</div>
+            </div>
+          </div>
+        </div>
         <div className="row" style={{ marginTop: 12 }}>
           <div style={{ position: "relative" }}>
             <label>Brand</label>
@@ -613,20 +670,7 @@ export default function ProductEditor() {
           counted automatically when orders are delivered. These update on their own.
           See the Reviews tab for all customer feedback.
         </p>
-        <div className="row" style={{ marginTop: 16 }}>
-          <div>
-            <label className="flex">
-              <input type="checkbox" style={{ width: "auto" }} checked={f.returnable} onChange={(e) => set("returnable", e.target.checked)} />
-              Return / refund available
-            </label>
-          </div>
-          {f.returnable && (
-            <div><label>Return window (days · 0 = store default)</label><input type="number" min={0} value={f.return_days} onChange={(e) => set("return_days", Number(e.target.value) || 0)} /></div>
-          )}
-        </div>
-        <p className="muted" style={{ marginTop: 4 }}>
-          If off, customers can't return/refund this product — the app shows your support phone (from Settings) instead.
-        </p>
+
 
         <label className="flex" style={{ marginTop: 16 }}>
           <input type="checkbox" style={{ width: "auto" }} checked={f.is_active} onChange={(e) => set("is_active", e.target.checked)} />

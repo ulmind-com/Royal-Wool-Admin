@@ -10,7 +10,7 @@ export default function Settings() {
   const [mapSearch, setMapSearch] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
-  const [cancelUnit, setCancelUnit] = useState<"hours" | "days">("hours");
+
 
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
@@ -113,15 +113,8 @@ export default function Settings() {
   const set = (k: string, v: any) => setS((p: any) => ({ ...p, [k]: v }));
   const setShop = (k: string, v: any) => setS((p: any) => ({ ...p, shop: { ...p.shop, [k]: v } }));
   const setDel = (k: string, v: any) => setS((p: any) => ({ ...p, delivery: { ...p.delivery, [k]: v } }));
-  const setCod = (k: string, v: any) => setS((p: any) => ({ ...p, cod: { ...(p.cod || {}), [k]: v } }));
 
-  // Is COD currently paused by the scheduled window?
-  const now = new Date();
-  const codFrom = s.cod?.disabled_from ? new Date(s.cod.disabled_from) : null;
-  const codUntil = s.cod?.disabled_until ? new Date(s.cod.disabled_until) : null;
-  const codPauseActive =
-    !!s.cod?.enabled && !!(codFrom || codUntil) &&
-    (!codFrom || now >= codFrom) && (!codUntil || now <= codUntil);
+
 
   const useMyLocation = () => {
     navigator.geolocation.getCurrentPosition(
@@ -144,13 +137,7 @@ export default function Settings() {
     try {
       const body = {
         currency: s.currency, currency_code: s.currency_code,
-        cancel_window_hours: Number(s.cancel_window_hours ?? 24),
-        return_window_days: Number(s.return_window_days ?? 7),
-        cod: {
-          enabled: !!s.cod?.enabled,
-          disabled_from: s.cod?.disabled_from || null,
-          disabled_until: s.cod?.disabled_until || null,
-        },
+
         shop: {
           ...s.shop,
           lat: s.shop.lat === "" ? null : Number(s.shop.lat),
@@ -184,74 +171,12 @@ export default function Settings() {
         </div>
         <p className="muted" style={{ marginTop: 4 }}>GST is set per product (CGST / SGST / IGST) in the product editor.</p>
 
-        <div className="row" style={{ marginTop: 4 }}>
-          <div>
-            <label>Order cancellation window</label>
-            <input
-              type="number"
-              min={0}
-              value={cancelUnit === "days" ? Number(s.cancel_window_hours ?? 24) / 24 : Number(s.cancel_window_hours ?? 24)}
-              onChange={(e) => set("cancel_window_hours", (Number(e.target.value) || 0) * (cancelUnit === "days" ? 24 : 1))}
-            />
-          </div>
-          <div>
-            <label>Unit</label>
-            <select value={cancelUnit} onChange={(e) => setCancelUnit(e.target.value as "hours" | "days")}>
-              <option value="hours">Hours</option>
-              <option value="days">Days</option>
-            </select>
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: 4 }}>
-          Customers can cancel an order within this time of placing it (before it ships). Set to 0 to disable cancellation. Currently: {Number(s.cancel_window_hours ?? 24) === 0 ? "disabled" : `${Number(s.cancel_window_hours ?? 24)} hour(s)`}.
-        </p>
 
-        <div className="row" style={{ marginTop: 4 }}>
-          <div>
-            <label>Return / exchange window (days)</label>
-            <input type="number" min={0} value={Number(s.return_window_days ?? 7)} onChange={(e) => set("return_window_days", Number(e.target.value) || 0)} />
-          </div>
-          <div style={{ flex: 1 }} />
-        </div>
-        <p className="muted" style={{ marginTop: 4 }}>
-          Customers can request a return/exchange within this many days of delivery. Set to 0 to disable returns.
-        </p>
+
+
       </div>
 
-      <div className="card">
-        <div className="between">
-          <h3 style={{ margin: 0 }}>Cash on Delivery (COD)</h3>
-          <label style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
-            <input
-              type="checkbox"
-              style={{ width: 18, height: 18 }}
-              checked={!!s.cod?.enabled}
-              onChange={(e) => setCod("enabled", e.target.checked)}
-            />
-            {s.cod?.enabled ? "Enabled" : "Disabled"}
-          </label>
-        </div>
-        <p className="muted" style={{ marginTop: 4 }}>
-          Master switch. Turn this off to disable Cash on Delivery for <b>everyone</b> instantly — only online payment stays available at checkout.
-        </p>
 
-        <div style={{ opacity: s.cod?.enabled ? 1 : 0.45, pointerEvents: s.cod?.enabled ? "auto" : "none" }}>
-          <label>Pause COD for a time period (optional)</label>
-          <div className="row">
-            <div><input type="datetime-local" value={s.cod?.disabled_from || ""} onChange={(e) => setCod("disabled_from", e.target.value || null)} /></div>
-            <div><input type="datetime-local" value={s.cod?.disabled_until || ""} onChange={(e) => setCod("disabled_until", e.target.value || null)} /></div>
-            <div style={{ display: "flex", alignItems: "flex-end", flex: "0 0 auto" }}>
-              <button className="btn ghost sm" onClick={() => { setCod("disabled_from", null); setCod("disabled_until", null); }}>Clear</button>
-            </div>
-          </div>
-          <p className="muted" style={{ marginTop: 4 }}>
-            COD is automatically off during this window (e.g. a festival/holiday). <b>From</b> → <b>Until</b>. Leave both blank for no pause; set only <b>Until</b> to pause from now until then.
-          </p>
-          {codPauseActive && (
-            <span className="pill" style={{ background: "#fdecec", color: "#c0392b" }}>COD is currently paused by this schedule</span>
-          )}
-        </div>
-      </div>
 
       <div className="card">
         <div className="between"><h3 style={{ margin: 0 }}>Shop location</h3>
