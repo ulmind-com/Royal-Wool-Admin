@@ -47,6 +47,12 @@ export default function Categories() {
     await api.post("/categories", { name: name.trim(), slug: slug(name) + "-" + Date.now().toString().slice(-4), parent_id: parentId });
     load();
   };
+  const setBlurb = async (id: string, current?: string) => {
+    const text = prompt("Tagline shown under this range in the site nav", current || "");
+    if (text === null) return;
+    await api.patch(`/categories/${id}`, { blurb: text.trim() });
+    load();
+  };
   const del = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"?`)) return;
     await api.del(`/categories/${id}`); load();
@@ -163,6 +169,15 @@ export default function Categories() {
               {c.image ? <img src={c.image} style={thumb(56)} /> : <FallbackImage size={56} />}
               <div>
                 <h3 style={{ margin: 0, fontSize: 22, color: "#0f172a" }}>{c.name}</h3>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748b" }}>
+                  {c.blurb || "No tagline yet"}{" "}
+                  <button
+                    onClick={() => setBlurb(c.id, c.blurb)}
+                    style={{ border: 0, background: "none", color: "#3b82f6", fontWeight: 600, cursor: "pointer", padding: 0 }}
+                  >
+                    Edit tagline
+                  </button>
+                </p>
                 <label style={{ cursor: "pointer", color: "#3b82f6", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                   {c.image ? "Change icon" : "Add icon"}
