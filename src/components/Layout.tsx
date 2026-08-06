@@ -13,11 +13,12 @@ const links = [
   { to: "/reviews", label: "Product Reviews" },
   { to: "/coupons", label: "Discount Codes" },
   { to: "/banners", label: "Promotional Banners" },
-  { to: "/home-layout", label: "Mobile App Layout" },
-  { to: "/notifications", label: "Push Notifications" },
+
   { to: "/home-layout", label: "Web Layout" },
+  { to: "/blog", label: "Journal / Blog" },
   { to: "/media", label: "Photo Library" },
   { to: "/settings", label: "Store Settings" },
+  { to: "/announcements", label: "Store Marquee" },
 ];
 
 export default function Layout() {

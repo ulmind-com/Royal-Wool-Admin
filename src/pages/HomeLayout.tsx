@@ -142,7 +142,7 @@ export default function HomeLayout() {
         <button className="btn" onClick={() => setEditing({ ...BLANK })}>+ Add Section</button>
       </div>
       <p className="muted" style={{ marginTop: -6 }}>
-        Build the app home screen. Drag order with ▲▼ — the top section shows first.
+        Build the website home layout. Drag order with ▲▼ — the top section shows first.
       </p>
 
       {/* Section list */}

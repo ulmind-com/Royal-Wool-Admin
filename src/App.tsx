@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { isAdmin } from "./auth";
 import Layout from "./components/Layout";
+import Blog from "./pages/Blog";
 import Categories from "./pages/Categories";
 import Combos from "./pages/Combos";
 import Coupons from "./pages/Coupons";
@@ -13,6 +14,7 @@ import ProductEditor from "./pages/ProductEditor";
 import Products from "./pages/Products";
 import Reviews from "./pages/Reviews";
 import Settings from "./pages/Settings";
+import Announcements from "./pages/Announcements";
 import Users from "./pages/Users";
 import Waitlist from "./pages/Waitlist";
 import Analytics from "./pages/Analytics";
@@ -47,8 +49,10 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/home-layout" element={<HomeLayout />} />
         <Route path="/media" element={<Media />} />
+        <Route path="/blog" element={<Blog />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/announcements" element={<Announcements />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
