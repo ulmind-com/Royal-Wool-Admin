@@ -24,6 +24,7 @@ export default function Announcements() {
     }).catch((e: any) => setErr(e.message));
   }, []);
 
+  if (err && !s) return <div className="err">{err}</div>;
   if (!s) return <p className="muted">Loading…</p>;
 
   const save = async () => {
@@ -140,7 +141,7 @@ export default function Announcements() {
         {items.map((item, idx) => (
           <div 
             key={idx} 
-            className={\`drag-item \${dragIdx === idx ? "dragging" : ""} \${dropIdx === idx ? "drag-over" : ""}\`}
+            className={`drag-item ${dragIdx === idx ? "dragging" : ""} ${dropIdx === idx ? "drag-over" : ""}`}
             draggable
             onDragStart={() => onDragStart(idx)}
             onDragOver={(e) => onDragOver(e, idx)}

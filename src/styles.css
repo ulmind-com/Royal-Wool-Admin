@@ -28,7 +28,10 @@ button { font-family: inherit; cursor: pointer; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; color: #cfc8c2; font-weight: 500; margin-bottom: 4px; }
 .nav a.active, .nav a:hover { background: rgba(255,255,255,0.08); color: #fff; }
 .nav a.active { background: var(--orange); color: #fff; }
-.main { flex: 1; padding: 26px 32px; max-width: 1440px; margin: 0 auto; }
+/* min-width:0 — without it a flex item refuses to shrink below its content's
+   intrinsic width, so one wide child (e.g. the marquee preview) drags the whole
+   shell, sidebar included, into a horizontal scroll. */
+.main { flex: 1; min-width: 0; padding: 26px 32px; max-width: 1440px; margin: 0 auto; }
 .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .topbar h1 { font-size: 24px; margin: 0; }
 .logout { background: none; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; color: var(--muted); }
@@ -49,7 +52,7 @@ label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
 input, select, textarea { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 9px; font-size: 14px; font-family: inherit; background: #fff; }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--orange); }
 .row { display: flex; gap: 14px; }
-.row > * { flex: 1; }
+.row > * { flex: 1; min-width: 0; }
 
 /* Buttons */
 .btn { background: var(--orange); color: #fff; border: none; padding: 11px 20px; border-radius: 9px; font-weight: 600; font-size: 14px; }

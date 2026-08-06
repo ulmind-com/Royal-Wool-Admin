@@ -108,11 +108,20 @@ export default function Settings() {
     setSearchResults([]);
   };
 
+  if (err && !s) return <div className="err">{err}</div>;
   if (!s) return <p className="muted">Loading…</p>;
 
   const set = (k: string, v: any) => setS((p: any) => ({ ...p, [k]: v }));
   const setShop = (k: string, v: any) => setS((p: any) => ({ ...p, shop: { ...p.shop, [k]: v } }));
   const setDel = (k: string, v: any) => setS((p: any) => ({ ...p, delivery: { ...p.delivery, [k]: v } }));
+
+  const sup = s.support || {};
+  const setSup = (k: string, v: any) =>
+    setS((p: any) => ({ ...p, support: { ...(p.support || {}), [k]: v } }));
+  const socials: any[] = sup.socials || [];
+  const setSocials = (next: any[]) => setSup("socials", next);
+  const updSocial = (i: number, k: string, v: string) =>
+    setSocials(socials.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
 
 
 
@@ -152,6 +161,13 @@ export default function Settings() {
           rest_base_fee: Number(s.delivery.rest_base_fee || 0),
           rest_base_weight_kg: Number(s.delivery.rest_base_weight_kg || 1),
           rest_extra_fee_per_kg: Number(s.delivery.rest_extra_fee_per_kg || 0),
+        },
+        support: {
+          ...(s.support || {}),
+          // Drop half-filled social rows so the storefront never renders a dead link.
+          socials: (s.support?.socials || []).filter(
+            (r: any) => (r?.label || "").trim() && (r?.href || "").trim()
+          ),
         },
       };
       const res = await api.put("/settings", body);
@@ -248,6 +264,72 @@ export default function Settings() {
           <div><label>Longitude</label><input type="number" value={s.shop.lng ?? ""} onChange={(e) => setShop("lng", e.target.value)} /></div>
         </div>
         <p className="muted">Click on the map or drag the marker to set location. Lat/Lng update automatically.</p>
+      </div>
+
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Support card (Contact page)</h3>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Everything the storefront's support card shows. Phone, email and address come from
+          <b> Shop location</b> above. Leave a field blank to hide that row on the site.
+        </p>
+
+        <div className="row">
+          <div style={{ flex: 2 }}>
+            <label>Card heading</label>
+            <input value={sup.title || ""} placeholder="We're always here to help you." onChange={(e) => setSup("title", e.target.value)} />
+          </div>
+          <div style={{ flex: 2 }}>
+            <label>Card sub-line</label>
+            <input value={sup.note || ""} placeholder="Reach us on whichever channel suits you." onChange={(e) => setSup("note", e.target.value)} />
+          </div>
+        </div>
+
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <label>WhatsApp number</label>
+            <input value={sup.whatsapp || ""} placeholder="+91 89107 92214" onChange={(e) => setSup("whatsapp", e.target.value)} />
+          </div>
+          <div style={{ flex: 2 }}>
+            <label>WhatsApp pre-filled message</label>
+            <input value={sup.whatsapp_message || ""} placeholder="Hi Royaall Wool, I have a question about your yarns." onChange={(e) => setSup("whatsapp_message", e.target.value)} />
+          </div>
+        </div>
+
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <label>Opening hours line</label>
+            <input value={sup.hours || ""} placeholder="Open 10am – 7pm IST, every day" onChange={(e) => setSup("hours", e.target.value)} />
+          </div>
+        </div>
+
+        <details style={{ marginTop: 8 }}>
+          <summary className="muted" style={{ cursor: "pointer" }}>Rename the row labels</summary>
+          <div className="row" style={{ marginTop: 12 }}>
+            <div><label>Phone row</label><input value={sup.hotline_label || ""} placeholder="Hotline" onChange={(e) => setSup("hotline_label", e.target.value)} /></div>
+            <div><label>WhatsApp row</label><input value={sup.whatsapp_label || ""} placeholder="SMS / WhatsApp" onChange={(e) => setSup("whatsapp_label", e.target.value)} /></div>
+            <div><label>Email row</label><input value={sup.email_label || ""} placeholder="Email" onChange={(e) => setSup("email_label", e.target.value)} /></div>
+            <div><label>Address row</label><input value={sup.address_label || ""} placeholder="Studio" onChange={(e) => setSup("address_label", e.target.value)} /></div>
+          </div>
+        </details>
+
+        <div className="between" style={{ marginTop: 20 }}>
+          <h4 style={{ margin: 0 }}>Connect with us</h4>
+          <button className="btn ghost sm" onClick={() => setSocials([...socials, { label: "", href: "" }])}>+ Add link</button>
+        </div>
+        {socials.length === 0 && <p className="muted">No social links yet — the section stays hidden on the site.</p>}
+        {socials.map((row: any, i: number) => (
+          <div className="row" key={i} style={{ alignItems: "flex-end" }}>
+            <div style={{ flex: 1 }}>
+              <label>Label</label>
+              <input value={row.label || ""} placeholder="Instagram" onChange={(e) => updSocial(i, "label", e.target.value)} />
+            </div>
+            <div style={{ flex: 3 }}>
+              <label>Link</label>
+              <input value={row.href || ""} placeholder="https://instagram.com/royaallwool" onChange={(e) => updSocial(i, "href", e.target.value)} />
+            </div>
+            <button className="btn danger sm" onClick={() => setSocials(socials.filter((_, idx) => idx !== i))}>Remove</button>
+          </div>
+        ))}
       </div>
 
       <div className="card">
