@@ -119,7 +119,7 @@ export default function Announcements() {
           </div>
         </div>
       </div>
-      <style>{\`
+      <style>{`
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-33.33%); } }
         .drag-item {
           display: flex; gap: 12px; align-items: center; padding: 14px 16px; 
@@ -133,7 +133,7 @@ export default function Announcements() {
         .drag-handle:active { cursor: grabbing; }
         .smart-tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .smart-tag { background: #fff7f3; color: var(--orange); border: 1px dashed rgba(242, 106, 33, 0.4); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-family: monospace; font-weight: 600; cursor: pointer; user-select: text; }
-      \`}</style>
+      `}</style>
 
       {/* Editor Section */}
       <div>
