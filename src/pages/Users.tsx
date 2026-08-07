@@ -26,13 +26,13 @@ export default function Users() {
   const [err, setErr] = useState("");
   const [userOrders, setUserOrders] = useState<Record<string, any[]>>({});
 
-  const [quickFilter, setQuickFilter] = useState<"all" | "top_spenders" | "cod_disabled" | "zero_orders">("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "top_spenders" | "zero_orders">("all");
   const [sortBy, setSortBy] = useState<"joined_desc" | "joined_asc" | "spent_desc" | "spent_asc" | "orders_desc" | "orders_asc">("joined_desc");
 
   const processedRows = rows
     .filter(u => {
       if (quickFilter === "top_spenders") return u.total_spent > 0;
-      if (quickFilter === "cod_disabled") return u.cod_blocked;
+
       if (quickFilter === "zero_orders") return u.orders_count === 0;
       return true;
     })
@@ -82,31 +82,19 @@ export default function Users() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const toggleCod = async (u: any) => {
-    setErr(""); setBusy(u.id);
-    try {
-      const blocked = !u.cod_blocked;
-      const r = await api.patch(`/users/admin/${u.id}/cod`, { blocked });
-      setRows((prev) => prev.map((x) => (x.id === u.id ? { ...x, cod_blocked: r.cod_blocked } : x)));
-    } catch (e: any) {
-      setErr(e.message);
-    } finally {
-      setBusy(null);
-    }
-  };
+
 
   return (
     <>
       <h1>Users</h1>
       <p className="muted" style={{ marginTop: -8 }}>
-        Every customer with full details and lifetime order stats. Turn Cash on Delivery off for any individual user here.
+        Every customer with full details and lifetime order stats.
       </p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 4 }}>
         {[
           { id: "all", label: "All Customers", icon: "📦" },
           { id: "top_spenders", label: "Top Spenders", icon: "🏆" },
-          { id: "cod_disabled", label: "COD Disabled", icon: "🚫" },
           { id: "zero_orders", label: "Zero Orders", icon: "👻" },
         ].map(t => (
           <button 
@@ -157,7 +145,7 @@ export default function Users() {
               <th>In Cart</th>
               <th onClick={() => handleSort("orders")} style={{ cursor: "pointer", userSelect: "none" }}>Orders {sortBy.startsWith("orders") ? (sortBy.endsWith("desc") ? "↓" : "↑") : ""}</th>
               <th onClick={() => handleSort("spent")} style={{ cursor: "pointer", userSelect: "none" }}>Spent {sortBy.startsWith("spent") ? (sortBy.endsWith("desc") ? "↓" : "↑") : ""}</th>
-              <th>COD</th><th></th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -189,23 +177,8 @@ export default function Users() {
                   </td>
                   <td><b>{u.orders_count}</b></td>
                   <td><b>{money(u.total_spent)}</b></td>
-                  <td>
-                    {u.cod_blocked ? (
-                      <span className="pill" style={{ background: "#fdecec", color: "#c0392b" }}>COD off</span>
-                    ) : (
-                      <span className="pill" style={{ background: "#e7f5ec", color: "#1c8a4a" }}>COD on</span>
-                    )}
-                  </td>
                   <td style={{ whiteSpace: "nowrap" }}>
-                    <button
-                      className="btn ghost sm"
-                      disabled={busy === u.id || u.role === "admin"}
-                      onClick={() => toggleCod(u)}
-                      title={u.role === "admin" ? "Admins don't use COD" : ""}
-                    >
-                      {busy === u.id ? "…" : u.cod_blocked ? "Enable COD" : "Disable COD"}
-                    </button>
-                    <button className="btn ghost sm" style={{ marginLeft: 6 }} onClick={() => handleView(u)}>
+                    <button className="btn ghost sm" onClick={() => handleView(u)}>
                       {open === u.id ? "Hide" : "View"}
                     </button>
                   </td>
@@ -224,7 +197,7 @@ export default function Users() {
                           <div className="kv"><span className="k">Sign-in</span><span className="v">{u.provider || "email"}</span></div>
                           <div className="kv"><span className="k">Joined</span><span className="v">{fmtDT(u.created_at)}</span></div>
                           <div className="kv"><span className="k">Push devices</span><span className="v">{u.fcm_tokens}</span></div>
-                          <div className="kv"><span className="k">COD</span><span className="v">{u.cod_blocked ? "Disabled" : "Enabled"}</span></div>
+
                         </div>
 
                         <div className="section-title">Lifetime</div>
