@@ -46,7 +46,10 @@ export default function Invoice() {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #1e293b", paddingBottom: 20, marginBottom: 30 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 32, letterSpacing: "-1px" }}>Royaall Wool</h1>
+          <h1 style={{ margin: 0, fontSize: 32, letterSpacing: "-1px" }}>
+            <span style={{ color: "#800000", fontWeight: "bold" }}>Royaall</span>{" "}
+            <span style={{ color: "#D4AF37", fontStyle: "italic", fontWeight: 500 }}>Wool</span>
+          </h1>
           <p style={{ margin: "5px 0 0", color: "#64748b", fontSize: 14 }}>Premium Yarn & Wool Retailer</p>
         </div>
         <div style={{ textAlign: "right" }}>
