@@ -202,7 +202,15 @@ export default function Orders() {
                     </div>
                   </td>
                   <td><b>₹{o.amount?.toFixed(2)}</b></td>
-                  <td><span className="pill" style={{ background: "#f1f1f4" }}>{o.payment_method?.toUpperCase()}</span></td>
+                  <td>
+                    {o.payment_method === "online" && o.razorpay_payment_id ? (
+                      <span className="pill" style={{ background: "#dcfce7", color: "#15803d", fontWeight: 600 }}>PAID</span>
+                    ) : o.payment_method === "online" ? (
+                      <span className="pill" style={{ background: "#fee2e2", color: "#b91c1c", fontWeight: 600 }}>UNPAID</span>
+                    ) : (
+                      <span className="pill" style={{ background: "#f1f1f4" }}>{o.payment_method?.toUpperCase()}</span>
+                    )}
+                  </td>
                   <td>
                     <select value={o.status} onChange={(e) => handleStatusChange(o.id, e.target.value)}>
                       {STAGES.map((s) => <option key={s} value={s}>{label(s)}</option>)}
