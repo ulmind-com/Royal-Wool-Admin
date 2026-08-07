@@ -8,7 +8,6 @@ import Coupons from "./pages/Coupons";
 import Dashboard from "./pages/Dashboard";
 import HomeLayout from "./pages/HomeLayout";
 import Login from "./pages/Login";
-import Media from "./pages/Media";
 import Orders from "./pages/Orders";
 import ProductEditor from "./pages/ProductEditor";
 import Products from "./pages/Products";
@@ -48,7 +47,6 @@ export default function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/users" element={<Users />} />
         <Route path="/home-layout" element={<HomeLayout />} />
-        <Route path="/media" element={<Media />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/settings" element={<Settings />} />

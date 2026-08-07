@@ -15,7 +15,6 @@ const links = [
 
   { to: "/home-layout", label: "Web Layout" },
   { to: "/blog", label: "Journal / Blog" },
-  { to: "/media", label: "Photo Library" },
   { to: "/settings", label: "Store Settings" },
   { to: "/announcements", label: "Store Marquee" },
 ];
