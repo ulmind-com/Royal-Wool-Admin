@@ -31,7 +31,7 @@ export default function Products() {
   };
 
   const filteredItems = items.filter((p) => {
-    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !(p.sku || "").toLowerCase().includes(search.toLowerCase()) && !(p.colors || []).some((c: any) => (c.shade_code || "").toLowerCase().includes(search.toLowerCase()))) return false;
     if (catFilter && p.category_id !== catFilter) return false;
     if (statusFilter === "active" && !p.is_active) return false;
     if (statusFilter === "hidden" && p.is_active) return false;
@@ -48,7 +48,7 @@ export default function Products() {
       
       <div className="card" style={{ marginTop: 18, marginBottom: -18, padding: 12, display: "flex", gap: 12, background: "#fafafa", border: "1px solid #eaeaea" }}>
         <input 
-          placeholder="Search by title or SKU..." 
+          placeholder="Search by title, SKU or shade code..."
           value={search} 
           onChange={e => setSearch(e.target.value)} 
           style={{ flex: 1, margin: 0, padding: "8px 12px" }}
@@ -114,10 +114,8 @@ export default function Products() {
                   </tr>
                   
                   {p.colors && p.colors.length > 0 && p.colors.map((c: any, i: number) => {
-                    const cStock = c.dye_lots && c.dye_lots.length > 0 
-                      ? c.dye_lots.reduce((acc: number, dl: any) => acc + (dl.stock || 0), 0)
-                      : (c.stock || 0);
-                      
+                    const cStock = c.stock || 0;
+
                     return (
                       <tr key={`${p.id}-col-${i}`} style={{ background: "#fafafa" }}>
                         <td style={{ paddingLeft: 30 }}>
@@ -137,7 +135,10 @@ export default function Products() {
                             ) : (
                                <div style={{ width: 20, height: 20, borderRadius: 4, background: c.hex || "#ccc", border: "1px solid #e1e1e1" }}></div>
                             )}
-                            <div style={{ fontSize: 13, color: "#444" }}>{c.name} {c.color_family ? <span style={{ color: "#888" }}>({c.color_family})</span> : ""}</div>
+                            <div style={{ fontSize: 13, color: "#444" }}>
+                              {c.shade_code && <span className="pill" style={{ fontSize: 11, padding: "1px 6px", marginRight: 6, background: "#f0f0f0", color: "#555" }}>{c.shade_code}</span>}
+                              {c.name} {c.color_family ? <span style={{ color: "#888" }}>({c.color_family})</span> : ""}
+                            </div>
                           </div>
                         </td>
                         <td></td>
