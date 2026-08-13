@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api } from "../api";
 
-const fmtDT = (d?: string | null) => (d ? new Date(d).toLocaleString() : "—");
+import { fmtDateTime as fmtDT } from "../date";
 const money = (n: any) => `₹${Number(n ?? 0).toFixed(2)}`;
 
 function Copyable({ value }: { value?: string | null }) {

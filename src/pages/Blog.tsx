@@ -42,7 +42,7 @@ const slugify = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, "-").repla
 const words = (p: Post) => [p.excerpt, ...p.body.map((b) => b.text)].join(" ").trim().split(/\s+/).filter(Boolean).length;
 const prettyDate = (v: string) => {
   const d = new Date(v);
-  return isNaN(d.getTime()) ? v : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  return isNaN(d.getTime()) ? v : d.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric" });
 };
 
 export default function Blog() {

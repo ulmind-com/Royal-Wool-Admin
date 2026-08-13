@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { fmtDate } from "../date";
 
 type Review = {
   id: string;
@@ -217,7 +218,7 @@ export default function Reviews() {
                     <ThumbDown /> {r.unhelpful_count || 0}
                   </span>
                 </td>
-                <td className="muted">{new Date(r.created_at).toLocaleDateString()}</td>
+                <td className="muted">{fmtDate(r.created_at)}</td>
               </tr>
             ))}
             {!loading && filtered.length === 0 && (

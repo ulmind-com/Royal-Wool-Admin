@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { fmtDate } from "../date";
 
 const empty = { code: "", type: "percent", value: 10, min_order: 0, max_discount: 0, active: true, first_order_only: false, free_shipping: false, usage_limit: 0, limit_per_user: 0, valid_from: "", valid_until: "", description: "" };
 
@@ -111,7 +112,7 @@ export default function Coupons() {
                   <div style={{ fontSize: 13 }}>Per user: {c.limit_per_user || "∞"}</div>
                   <div style={{ fontSize: 13 }}>Total: {c.used_count || 0} / {c.usage_limit || "∞"}</div>
                 </td>
-                <td className="muted">{c.valid_from ? new Date(c.valid_from).toLocaleDateString() : "—"} → {c.valid_until ? new Date(c.valid_until).toLocaleDateString() : "∞"}</td>
+                <td className="muted">{c.valid_from ? fmtDate(c.valid_from) : "—"} → {c.valid_until ? fmtDate(c.valid_until) : "∞"}</td>
                 <td><button className="btn ghost sm" onClick={() => toggle(c)}>{c.active ? "Active ✓" : "Inactive"}</button></td>
                 <td className="flex">
                   <button className="btn ghost sm" onClick={() => edit(c)}>Edit</button>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { fmtDateTime } from "../date";
 
 const emptyForm = { name: "", email: "", password: "" };
 
@@ -87,7 +88,7 @@ export default function Admins() {
                     ? <span style={{ fontSize: 11, fontWeight: 600, color: "#F26A21", background: "#fff3eb", padding: "2px 7px", borderRadius: 6 }}>Owner</span>
                     : <span style={{ fontSize: 11, fontWeight: 600, color: "#6366f1", background: "#eef", padding: "2px 7px", borderRadius: 6 }}>Admin</span>}
                 </td>
-                <td className="muted">{a.last_login ? new Date(a.last_login).toLocaleString() : "Never"}</td>
+                <td className="muted">{a.last_login ? fmtDateTime(a.last_login) : "Never"}</td>
                 <td className="flex">
                   <button className="btn ghost sm" onClick={() => applyFilter(a.id)}>View activity</button>
                   {!a.is_super && <button className="btn danger sm" onClick={() => revoke(a)}>Revoke</button>}
@@ -115,7 +116,7 @@ export default function Admins() {
           <tbody>
             {activity.map((a) => (
               <tr key={a.id}>
-                <td className="muted">{a.at ? new Date(a.at).toLocaleString() : "—"}</td>
+                <td className="muted">{fmtDateTime(a.at)}</td>
                 <td>{a.admin_name || a.admin_email}</td>
                 <td>{describe(a)}</td>
                 <td className="muted" style={{ fontSize: 12 }}>{a.method} {a.path}{a.status ? ` · ${a.status}` : ""}</td>

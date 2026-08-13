@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
+import { fmtDate } from "../date";
 
 export default function Invoice() {
   const { id } = useParams();
@@ -21,7 +22,7 @@ export default function Invoice() {
   if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Loading Invoice...</div>;
   if (!order) return <div style={{ padding: 40, textAlign: "center", color: "red" }}>Order not found.</div>;
 
-  const date = new Date(order.created_at).toLocaleDateString();
+  const date = fmtDate(order.created_at);
 
   return (
     <div className="invoice-container" style={{ padding: "40px", maxWidth: "800px", margin: "0 auto", color: "#0f172a", fontFamily: "system-ui, sans-serif" }}>

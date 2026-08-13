@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import PaymentInfo from "../components/PaymentInfo";
+import { fmtDate } from "../date";
 
 const STATUSES = ["requested", "approved", "rejected", "picked_up", "refunded", "exchanged"];
 const label = (s: string) => s.replace(/_/g, " ");
@@ -55,7 +56,7 @@ export default function Returns() {
                 <tr key={r.id}>
                   <td>
                     <b>#{r.order_short}</b>
-                    <div className="muted">{new Date(r.created_at).toLocaleDateString()}</div>
+                    <div className="muted">{fmtDate(r.created_at)}</div>
                   </td>
                   <td><span className="pill" style={{ background: "#f1f1f4" }}>{r.type}</span></td>
                   <td style={{ maxWidth: 240 }}>

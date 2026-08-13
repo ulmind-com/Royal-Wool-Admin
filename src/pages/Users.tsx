@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { fmtDate, fmtDateTime as fmtDT } from "../date";
 
 const money = (n: any) => `₹${Number(n ?? 0).toFixed(2)}`;
-const fmtDate = (d?: string) => (d ? new Date(d).toLocaleDateString() : "—");
-const fmtDT = (d?: string) => (d ? new Date(d).toLocaleString() : "—");
 
 const rolePill = (role?: string) => (
   <span

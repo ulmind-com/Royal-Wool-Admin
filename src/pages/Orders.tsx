@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import PaymentInfo from "../components/PaymentInfo";
+import { fmtDate } from "../date";
 
 const STAGES = ["placed", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"];
 const label = (s: string) => s.replace(/_/g, " ");
@@ -189,7 +190,7 @@ export default function Orders() {
                     else next.delete(o.id);
                     setSelectedOrders(next);
                   }} /></td>
-                  <td><b>#{o.id.slice(-6).toUpperCase()}</b><div className="muted">{new Date(o.created_at).toLocaleDateString()}</div></td>
+                  <td><b>#{o.id.slice(-6).toUpperCase()}</b><div className="muted">{fmtDate(o.created_at)}</div></td>
                   <td>{o.address?.name || "—"}<div className="muted">{o.address?.phone}</div></td>
                   <td>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4, maxWidth: 220 }}>

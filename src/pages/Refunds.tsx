@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import PaymentInfo from "../components/PaymentInfo";
+import { fmtDate, fmtDateTime } from "../date";
 
 const badge = (status?: string) => {
   const map: Record<string, { bg: string; fg: string; label: string }> = {
@@ -34,7 +35,7 @@ export default function Refunds() {
   };
 
   const money = (n: number) => `₹${(n ?? 0).toFixed(2)}`;
-  const when = (d?: string) => (d ? new Date(d).toLocaleString() : "—");
+  const when = fmtDateTime;
 
   return (
     <>
@@ -56,7 +57,7 @@ export default function Refunds() {
               return (
                 <>
                   <tr key={o.id}>
-                    <td><b>#{o.id.slice(-6).toUpperCase()}</b><div className="muted">{new Date(o.created_at).toLocaleDateString()}</div></td>
+                    <td><b>#{o.id.slice(-6).toUpperCase()}</b><div className="muted">{fmtDate(o.created_at)}</div></td>
                     <td>{o.address?.name || "—"}<div className="muted">{o.address?.phone}</div></td>
                     <td><b>{money(o.amount)}</b></td>
                     <td><span className="pill" style={{ background: "#f1f1f4" }}>{o.payment_method?.toUpperCase()}</span></td>
