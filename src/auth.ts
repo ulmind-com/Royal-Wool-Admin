@@ -15,3 +15,9 @@ export const logout = () => {
   localStorage.removeItem(UKEY);
 };
 export const isAdmin = () => getUser()?.role === "admin";
+// Owner/super admin. Older stored sessions have no is_super field -> treat as super
+// (matches the backend, which treats the original owner credential as super).
+export const isSuper = () => {
+  const u = getUser();
+  return !!u && u.role === "admin" && u.is_super !== false;
+};

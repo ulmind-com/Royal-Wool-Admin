@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { getUser, logout } from "../auth";
+import { getUser, isSuper, logout } from "../auth";
 
 const links = [
   { to: "/", label: "Dashboard", end: true },
@@ -19,6 +19,9 @@ const links = [
   { to: "/announcements", label: "Store Marquee" },
 ];
 
+// Owner-only links (super admin).
+const superLinks = [{ to: "/admins", label: "Team & Access" }];
+
 export default function Layout() {
   const nav = useNavigate();
   const user = getUser();
@@ -32,6 +35,12 @@ export default function Layout() {
               {l.label}
             </NavLink>
           ))}
+          {isSuper() &&
+            superLinks.map((l) => (
+              <NavLink key={l.to} to={l.to}>
+                {l.label}
+              </NavLink>
+            ))}
         </nav>
       </aside>
       <div className="main">

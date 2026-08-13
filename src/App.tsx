@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { isAdmin } from "./auth";
+import { isAdmin, isSuper } from "./auth";
+import Admins from "./pages/Admins";
 import Layout from "./components/Layout";
 import Blog from "./pages/Blog";
 import Categories from "./pages/Categories";
@@ -21,6 +22,11 @@ import Invoice from "./pages/Invoice";
 
 function Guard({ children }: { children: React.ReactNode }) {
   return isAdmin() ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function SuperGuard({ children }: { children: React.ReactNode }) {
+  if (!isAdmin()) return <Navigate to="/login" replace />;
+  return isSuper() ? <>{children}</> : <Navigate to="/" replace />;
 }
 
 export default function App() {
@@ -51,6 +57,7 @@ export default function App() {
         <Route path="/reviews" element={<Reviews />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/announcements" element={<Announcements />} />
+        <Route path="/admins" element={<SuperGuard><Admins /></SuperGuard>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
