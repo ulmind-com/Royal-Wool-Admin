@@ -22,7 +22,6 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [userOrders, setUserOrders] = useState<Record<string, any[]>>({});
 

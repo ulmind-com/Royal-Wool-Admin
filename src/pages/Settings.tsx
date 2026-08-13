@@ -80,11 +80,10 @@ export default function Settings() {
     debounceRef.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`
-        );
-        const data = await res.json();
-        setSearchResults(data);
+        // Proxy through the backend — direct Nominatim calls get blocked by
+        // ad-blockers / Nominatim's User-Agent policy from the browser.
+        const data = await api.get<any[]>(`/settings/geocode?q=${encodeURIComponent(query)}&limit=5`);
+        setSearchResults(Array.isArray(data) ? data : []);
       } catch {
         setSearchResults([]);
       } finally {
@@ -248,6 +247,9 @@ export default function Settings() {
             </div>
           )}
           {searching && <p className="muted" style={{ margin: "4px 0" }}>Searching...</p>}
+          {!searching && mapSearch.trim() && searchResults.length === 0 && (
+            <p className="muted" style={{ margin: "4px 0" }}>No matching places found.</p>
+          )}
         </div>
 
         {/* Leaflet map */}
