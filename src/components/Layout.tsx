@@ -1,23 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { getUser, isSuper, logout } from "../auth";
-
-const links = [
-  { to: "/", label: "Dashboard", end: true },
-  { to: "/analytics", label: "Analytics & Reports" },
-  { to: "/products", label: "Yarn Inventory" },
-  { to: "/categories", label: "Yarn Categories" },
-  { to: "/waitlist", label: "Restock Waitlist" },
-  { to: "/combos", label: "Bundle Offers" },
-  { to: "/orders", label: "Customer Orders" },
-  { to: "/users", label: "Customers" },
-  { to: "/reviews", label: "Product Reviews" },
-  { to: "/coupons", label: "Discount Codes" },
-
-  { to: "/home-layout", label: "Web Layout" },
-  { to: "/blog", label: "Journal / Blog" },
-  { to: "/settings", label: "Store Settings" },
-  { to: "/announcements", label: "Store Marquee" },
-];
+import { getUser, hasSection, isSuper, logout } from "../auth";
+import { SECTIONS } from "../sections";
 
 // Owner-only links (super admin).
 const superLinks = [{ to: "/admins", label: "Team & Access" }];
@@ -30,9 +13,9 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="brand">Royaall<span>.</span>Wool</div>
         <nav className="nav">
-          {links.map((l) => (
-            <NavLink key={l.to} to={l.to} end={l.end}>
-              {l.label}
+          {SECTIONS.filter((s) => hasSection(s.key)).map((s) => (
+            <NavLink key={s.path} to={s.path} end={s.end}>
+              {s.label}
             </NavLink>
           ))}
           {isSuper() &&

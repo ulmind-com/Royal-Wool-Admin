@@ -21,3 +21,16 @@ export const isSuper = () => {
   const u = getUser();
   return !!u && u.role === "admin" && u.is_super !== false;
 };
+
+// Section access. null => unrestricted (owner / legacy admin); otherwise the
+// explicit list of section keys this admin may open.
+export const getPermissions = (): string[] | null => {
+  const u = getUser();
+  if (!u) return [];
+  if (isSuper()) return null;
+  return u.permissions ?? null;
+};
+export const hasSection = (key: string): boolean => {
+  const p = getPermissions();
+  return p === null ? true : p.includes(key);
+};

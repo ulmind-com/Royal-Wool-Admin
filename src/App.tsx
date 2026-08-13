@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { isAdmin, isSuper } from "./auth";
+import { hasSection, isAdmin, isSuper } from "./auth";
+import { SECTIONS } from "./sections";
 import Admins from "./pages/Admins";
 import Layout from "./components/Layout";
 import Blog from "./pages/Blog";
@@ -29,11 +30,34 @@ function SuperGuard({ children }: { children: React.ReactNode }) {
   return isSuper() ? <>{children}</> : <Navigate to="/" replace />;
 }
 
+const firstAllowedPath = (): string | null => {
+  const s = SECTIONS.find((s) => hasSection(s.key));
+  return s ? s.path : null;
+};
+
+function NoAccess() {
+  return (
+    <div style={{ padding: 40, textAlign: "center" }}>
+      <h2>No sections assigned</h2>
+      <p className="muted">Your account doesn't have access to any section yet. Please ask the store owner to grant you access.</p>
+    </div>
+  );
+}
+
+// Gate a route by its section key: allowed -> render; otherwise send the admin
+// to their first accessible section (or a friendly message if they have none).
+function Sec({ k, children }: { k: string; children: React.ReactNode }) {
+  if (!isAdmin()) return <Navigate to="/login" replace />;
+  if (hasSection(k)) return <>{children}</>;
+  const dest = firstAllowedPath();
+  return dest ? <Navigate to={dest} replace /> : <NoAccess />;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/orders/:id/invoice" element={<Guard><Invoice /></Guard>} />
+      <Route path="/orders/:id/invoice" element={<Guard><Sec k="orders"><Invoice /></Sec></Guard>} />
       <Route
         element={
           <Guard>
@@ -41,22 +65,22 @@ export default function App() {
           </Guard>
         }
       >
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/new" element={<ProductEditor />} />
-        <Route path="/products/:id" element={<ProductEditor />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/combos" element={<Combos />} />
-        <Route path="/waitlist" element={<Waitlist />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/coupons" element={<Coupons />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/home-layout" element={<HomeLayout />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/reviews" element={<Reviews />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/announcements" element={<Announcements />} />
+        <Route path="/" element={<Sec k="dashboard"><Dashboard /></Sec>} />
+        <Route path="/products" element={<Sec k="products"><Products /></Sec>} />
+        <Route path="/products/new" element={<Sec k="products"><ProductEditor /></Sec>} />
+        <Route path="/products/:id" element={<Sec k="products"><ProductEditor /></Sec>} />
+        <Route path="/categories" element={<Sec k="categories"><Categories /></Sec>} />
+        <Route path="/combos" element={<Sec k="combos"><Combos /></Sec>} />
+        <Route path="/waitlist" element={<Sec k="waitlist"><Waitlist /></Sec>} />
+        <Route path="/analytics" element={<Sec k="analytics"><Analytics /></Sec>} />
+        <Route path="/coupons" element={<Sec k="coupons"><Coupons /></Sec>} />
+        <Route path="/orders" element={<Sec k="orders"><Orders /></Sec>} />
+        <Route path="/users" element={<Sec k="users"><Users /></Sec>} />
+        <Route path="/home-layout" element={<Sec k="home-layout"><HomeLayout /></Sec>} />
+        <Route path="/blog" element={<Sec k="blog"><Blog /></Sec>} />
+        <Route path="/reviews" element={<Sec k="reviews"><Reviews /></Sec>} />
+        <Route path="/settings" element={<Sec k="settings"><Settings /></Sec>} />
+        <Route path="/announcements" element={<Sec k="announcements"><Announcements /></Sec>} />
         <Route path="/admins" element={<SuperGuard><Admins /></SuperGuard>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
