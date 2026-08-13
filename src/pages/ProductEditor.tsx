@@ -8,6 +8,7 @@ const empty = {
   cgst: "" as number | string, sgst: "" as number | string, igst: "" as number | string,
   primary_color_name: "", primary_color_family: "", primary_shade_code: "",
   images: [] as string[],
+  colors: [] as any[],
   product_line: "",
   
   // Yarn specs
@@ -67,6 +68,20 @@ export default function ProductEditor() {
     } catch (e: any) { setErr(e.message); } finally { setUploading(false); }
   };
 
+  // --- Colours / shades (one product, many colours) ---
+  const blankColor = () => ({ name: "", shade_code: "", color_family: "", hex: "#cccccc", swatch_image: "", images: [] as string[], price: "" as any, mrp: "" as any, discount_pct: "" as any, stock: 0 });
+  const addColor = () => set("colors", [...f.colors, blankColor()]);
+  const updColor = (ci: number, k: string, v: any) => set("colors", f.colors.map((c, idx) => (idx === ci ? { ...c, [k]: v } : c)));
+  const rmColor = (ci: number) => set("colors", f.colors.filter((_, idx) => idx !== ci));
+  const [bulkText, setBulkText] = useState("");
+  const bulkAddColors = () => {
+    const rows = bulkText.split("\n").map((l) => l.trim()).filter(Boolean).map((line) => {
+      const [name, code] = line.split(/[,|\t]/).map((s) => (s || "").trim());
+      return { ...blankColor(), name: name || "", shade_code: code || "" };
+    });
+    if (rows.length) { set("colors", [...f.colors, ...rows]); setBulkText(""); }
+  };
+
   const addFiber = () => set("fiber_content", [...f.fiber_content, { fiber: "", percentage: 100 }]);
   const updFiber = (fi: number, k: string, v: any) => set("fiber_content", f.fiber_content.map((fb, idx) => (idx === fi ? { ...fb, [k]: v } : fb)));
   const rmFiber = (fi: number) => set("fiber_content", f.fiber_content.filter((_, idx) => idx !== fi));
@@ -108,8 +123,22 @@ export default function ProductEditor() {
       shipping_weight: f.shipping_weight === "" ? null : Number(f.shipping_weight),
       country_of_origin: f.country_of_origin || null,
       is_featured: f.is_featured,
+      colors: (f.colors || [])
+        .filter((c: any) => (c.name || "").trim())
+        .map((c: any) => ({
+          name: c.name.trim(),
+          shade_code: (c.shade_code || "").trim() || null,
+          color_family: (c.color_family || "").trim() || null,
+          hex: c.hex || "#000000",
+          swatch_image: c.swatch_image || null,
+          images: c.images || [],
+          price: c.price === "" || c.price == null ? null : Number(c.price),
+          mrp: c.mrp === "" || c.mrp == null ? null : Number(c.mrp),
+          discount_pct: c.discount_pct === "" || c.discount_pct == null ? null : Number(c.discount_pct),
+          stock: Number(c.stock) || 0,
+        })),
     };
-    
+
     setSaving(true);
     try {
       if (id) await api.patch(`/products/${id}`, body);
@@ -330,6 +359,73 @@ export default function ProductEditor() {
           <input ref={genFile} type="file" accept="image/*" multiple hidden
             onChange={(e) => uploadTo(e.target.files, (urls) => set("images", [...f.images, ...urls]))} />
         </div>
+      </div>
+
+      {/* Colours / Shades */}
+      <div className="card">
+        <h3 style={{ marginTop: 0 }}>Colours / Shades</h3>
+        <p className="muted" style={{ marginTop: -4 }}>
+          Add every shade this yarn comes in. Each colour becomes a swatch on the product page — the
+          customer picks a shade, sees its own images &amp; price, and adds that shade to the cart.
+          Leave Price/MRP blank to use the base price above. Blank Shade code is fine.
+        </p>
+
+        <div className="row" style={{ alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <label>Quick add many (one per line — “Colour name, SHADECODE”)</label>
+            <textarea rows={3} value={bulkText} onChange={(e) => setBulkText(e.target.value)}
+              placeholder={"Azure Blue, COD023\nJet Black, COD045\nMaroon"} />
+          </div>
+        </div>
+        <div className="flex" style={{ gap: 8, marginBottom: 12 }}>
+          <button type="button" className="btn ghost sm" onClick={bulkAddColors} disabled={!bulkText.trim()}>+ Add these</button>
+          <button type="button" className="btn ghost sm" onClick={addColor}>+ Add one colour</button>
+        </div>
+
+        {f.colors.length > 0 && (
+          <div style={{ overflowX: "auto" }}>
+            <table>
+              <thead><tr>
+                <th>Swatch</th><th>Colour name</th><th>Shade code</th><th>Family</th>
+                <th>Price ₹</th><th>MRP ₹</th><th>Disc %</th><th>Stock</th><th>Images</th><th></th>
+              </tr></thead>
+              <tbody>
+                {f.colors.map((c: any, ci: number) => (
+                  <tr key={ci}>
+                    <td>
+                      <input type="color" value={c.hex || "#cccccc"} onChange={(e) => updColor(ci, "hex", e.target.value)}
+                        style={{ width: 40, height: 34, padding: 0, border: "none", background: "none", cursor: "pointer" }} title="Swatch colour" />
+                    </td>
+                    <td><input style={{ minWidth: 130 }} value={c.name} onChange={(e) => updColor(ci, "name", e.target.value)} placeholder="e.g. Azure Blue" /></td>
+                    <td><input style={{ minWidth: 90 }} value={c.shade_code} onChange={(e) => updColor(ci, "shade_code", e.target.value)} placeholder="COD023" /></td>
+                    <td><input style={{ minWidth: 80 }} value={c.color_family} onChange={(e) => updColor(ci, "color_family", e.target.value)} placeholder="Blue" /></td>
+                    <td><input style={{ width: 70 }} type="number" value={c.price} onChange={(e) => updColor(ci, "price", e.target.value)} placeholder="base" /></td>
+                    <td><input style={{ width: 70 }} type="number" value={c.mrp} onChange={(e) => updColor(ci, "mrp", e.target.value)} placeholder="base" /></td>
+                    <td><input style={{ width: 60 }} type="number" value={c.discount_pct} onChange={(e) => updColor(ci, "discount_pct", e.target.value)} placeholder="0" /></td>
+                    <td><input style={{ width: 64 }} type="number" value={c.stock} onChange={(e) => updColor(ci, "stock", e.target.value)} /></td>
+                    <td>
+                      <div className="flex" style={{ gap: 4, flexWrap: "wrap", alignItems: "center" }}>
+                        {(c.images || []).map((u: string, ii: number) => (
+                          <div key={u + ii} style={{ position: "relative" }}>
+                            <img src={u} style={{ width: 34, height: 34, objectFit: "cover", borderRadius: 6 }} />
+                            <button type="button" onClick={() => updColor(ci, "images", c.images.filter((_: string, idx: number) => idx !== ii))}
+                              style={{ position: "absolute", top: -6, right: -6, background: "#e11", color: "#fff", border: "none", borderRadius: "50%", width: 16, height: 16, cursor: "pointer", fontSize: 10, lineHeight: "16px" }}>×</button>
+                          </div>
+                        ))}
+                        <label className="btn ghost sm" style={{ cursor: "pointer" }}>
+                          + img
+                          <input type="file" accept="image/*" multiple hidden
+                            onChange={(e) => uploadTo(e.target.files, (urls) => updColor(ci, "images", [...(c.images || []), ...urls]))} />
+                        </label>
+                      </div>
+                    </td>
+                    <td><button type="button" className="btn danger sm" onClick={() => rmColor(ci)}>✕</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Yarn Details */}
