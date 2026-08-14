@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import { api, uploadImage } from "../api";
 
 type Section = {
   id?: string;
@@ -31,7 +31,29 @@ const TYPE_LABEL: Record<string, string> = {
   category: "From a category",
 };
 
+type SiteMediaItem = {
+  id?: string;
+  section: string;
+  url: string;
+  poster?: string | null;
+  title: string;
+  subtitle: string;
+  order: number;
+  active: boolean;
+};
+
+type SiteMediaSpec = {
+  key: string;
+  label: string;
+  kind: string;
+  slots: number;
+  aspect: string;
+  description: string;
+  captions: boolean;
+};
+
 export default function HomeLayout() {
+  const [tab, setTab] = useState<"sections" | "media">("sections");
   const [sections, setSections] = useState<Section[]>([]);
   const [products, setProducts] = useState<Prod[]>([]);
   const [cats, setCats] = useState<Cat[]>([]);
@@ -40,6 +62,14 @@ export default function HomeLayout() {
   const [catFilter, setCatFilter] = useState("");
   const [desc, setDesc] = useState<Record<string, string[]>>({}); // category -> itself + children
   const [saving, setSaving] = useState(false);
+
+  // Site Media state
+  const [mediaSpecs, setMediaSpecs] = useState<SiteMediaSpec[]>([]);
+  const [mediaItems, setMediaItems] = useState<SiteMediaItem[]>([]);
+  const [mediaTab, setMediaTab] = useState("");
+  const [mediaEditing, setMediaEditing] = useState<SiteMediaItem | null>(null);
+  const [mediaSaving, setMediaSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const load = () =>
     api.get<Section[]>("/home-sections").then(setSections).catch(() => {});
@@ -55,8 +85,21 @@ export default function HomeLayout() {
     setProducts(all);
   };
 
+  const loadMedia = async () => {
+    try {
+      const [specs, items] = await Promise.all([
+        api.get<SiteMediaSpec[]>("/site-media/sections"),
+        api.get<SiteMediaItem[]>("/site-media/admin"),
+      ]);
+      setMediaSpecs(specs);
+      setMediaItems(items);
+      if (!mediaTab && specs.length > 0) setMediaTab(specs[0].key);
+    } catch {}
+  };
+
   useEffect(() => {
     load();
+    loadMedia();
     loadAllProducts().catch(() => {});
     api.get<any[]>("/categories/tree").then((tree) => {
       const flat: Cat[] = [];
@@ -74,6 +117,84 @@ export default function HomeLayout() {
       setDesc(d);
     }).catch(() => {});
   }, []);
+
+  // ── Site Media helpers ──
+  const currentSpec = mediaSpecs.find((s) => s.key === mediaTab);
+  const currentMediaItems = mediaItems
+    .filter((m) => m.section === mediaTab)
+    .sort((a, b) => a.order - b.order);
+
+  const handleMediaUpload = async (file: File) => {
+    if (!currentSpec) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      const item: Omit<SiteMediaItem, "id"> = {
+        section: mediaTab,
+        url,
+        title: "",
+        subtitle: "",
+        order: currentMediaItems.length,
+        active: true,
+      };
+      await api.post("/site-media", item);
+      await loadMedia();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveMedia = async () => {
+    if (!mediaEditing) return;
+    setMediaSaving(true);
+    try {
+      if (mediaEditing.id) {
+        await api.patch(`/site-media/${mediaEditing.id}`, {
+          url: mediaEditing.url,
+          title: mediaEditing.title,
+          subtitle: mediaEditing.subtitle,
+          active: mediaEditing.active,
+          order: mediaEditing.order,
+        });
+      } else {
+        await api.post("/site-media", mediaEditing);
+      }
+      setMediaEditing(null);
+      await loadMedia();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setMediaSaving(false);
+    }
+  };
+
+  const deleteMedia = async (item: SiteMediaItem) => {
+    if (!item.id || !confirm("Delete this media item?")) return;
+    await api.del(`/site-media/${item.id}`);
+    await loadMedia();
+  };
+
+  const toggleMediaActive = async (item: SiteMediaItem) => {
+    if (!item.id) return;
+    await api.patch(`/site-media/${item.id}`, { active: !item.active });
+    await loadMedia();
+  };
+
+  const handleMediaReplace = async (item: SiteMediaItem, file: File) => {
+    if (!item.id) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      await api.patch(`/site-media/${item.id}`, { url });
+      await loadMedia();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const move = async (idx: number, dir: -1 | 1) => {
     const next = [...sections];
@@ -139,11 +260,205 @@ export default function HomeLayout() {
     <>
       <div className="flex" style={{ justifyContent: "space-between", alignItems: "center" }}>
         <h1>Home Layout</h1>
+      </div>
+
+      {/* Tab bar */}
+      <div className="flex" style={{ gap: 0, marginBottom: 16, borderBottom: "2px solid var(--border)" }}>
+        <button
+          className="btn ghost"
+          style={{
+            borderRadius: 0,
+            borderBottom: tab === "sections" ? "2px solid var(--accent)" : "2px solid transparent",
+            fontWeight: tab === "sections" ? 600 : 400,
+            marginBottom: -2,
+          }}
+          onClick={() => setTab("sections")}
+        >
+          Product Sections
+        </button>
+        <button
+          className="btn ghost"
+          style={{
+            borderRadius: 0,
+            borderBottom: tab === "media" ? "2px solid var(--accent)" : "2px solid transparent",
+            fontWeight: tab === "media" ? 600 : 400,
+            marginBottom: -2,
+          }}
+          onClick={() => setTab("media")}
+        >
+          Site Media
+        </button>
+      </div>
+
+      {/* ── Site Media Tab ── */}
+      {tab === "media" && (
+        <>
+          <p className="muted" style={{ marginTop: -6 }}>
+            Upload and manage images for home page sections. Changes appear on the website immediately.
+          </p>
+
+          {/* Media section tabs */}
+          <div className="flex" style={{ gap: 6, flexWrap: "wrap", marginTop: 12, marginBottom: 16 }}>
+            {mediaSpecs.map((spec) => (
+              <button
+                key={spec.key}
+                className={`btn ${mediaTab === spec.key ? "" : "ghost"} sm`}
+                onClick={() => { setMediaTab(spec.key); setMediaEditing(null); }}
+              >
+                {spec.label}
+              </button>
+            ))}
+          </div>
+
+          {currentSpec && (
+            <>
+              <div className="card" style={{ marginBottom: 16 }}>
+                <div className="flex" style={{ justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h3 style={{ margin: 0 }}>{currentSpec.label}</h3>
+                    <p className="muted" style={{ marginTop: 4 }}>{currentSpec.description}</p>
+                    <p className="muted" style={{ fontSize: 12 }}>
+                      Aspect ratio: <b>{currentSpec.aspect}</b> · Max {currentSpec.slots} slot{currentSpec.slots !== 1 ? "s" : ""} · {currentSpec.kind === "video" ? "Video" : "Image"}
+                    </p>
+                  </div>
+                  <label className="btn" style={{ cursor: "pointer", opacity: uploading ? 0.6 : 1 }}>
+                    {uploading ? "Uploading…" : "+ Upload Image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleMediaUpload(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Media items grid */}
+              {currentMediaItems.length === 0 ? (
+                <div className="card" style={{ textAlign: "center", padding: 40 }}>
+                  <p className="muted">No images uploaded yet for this section.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                  {currentMediaItems.map((item) => (
+                    <div key={item.id} className="card" style={{ padding: 0, overflow: "hidden", opacity: item.active ? 1 : 0.5 }}>
+                      <div style={{ position: "relative", background: "#f5f3ef" }}>
+                        <img
+                          src={item.url}
+                          alt={item.title || "Media"}
+                          style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }}
+                        />
+                        {!item.active && (
+                          <span className="pill" style={{ position: "absolute", top: 8, right: 8, background: "#FDECEC", color: "#E23744" }}>
+                            Hidden
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ padding: "12px 16px" }}>
+                        {item.title && <p style={{ margin: 0, fontWeight: 600 }}>{item.title}</p>}
+                        {item.subtitle && <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>{item.subtitle}</p>}
+                        {!item.title && !item.subtitle && <p className="muted" style={{ margin: 0, fontSize: 13 }}>No title set</p>}
+                        <div className="flex" style={{ gap: 6, marginTop: 10 }}>
+                          <button className="btn ghost sm" onClick={() => setMediaEditing({ ...item })}>Edit</button>
+                          <button className="btn ghost sm" onClick={() => toggleMediaActive(item)}>
+                            {item.active ? "Hide" : "Show"}
+                          </button>
+                          <label className="btn ghost sm" style={{ cursor: "pointer" }}>
+                            Replace
+                            <input
+                              type="file"
+                              accept="image/*"
+                              style={{ display: "none" }}
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleMediaReplace(item, f);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          <button className="btn danger sm" onClick={() => deleteMedia(item)}>Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Media editor */}
+              {mediaEditing && (
+                <div className="card" style={{ marginTop: 16 }}>
+                  <h3 style={{ marginTop: 0 }}>Edit Media</h3>
+                  <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                    <img
+                      src={mediaEditing.url}
+                      alt="Preview"
+                      style={{ width: 160, height: 120, objectFit: "cover", borderRadius: 8, background: "#f5f3ef" }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div className="row">
+                        <div style={{ flex: 1 }}>
+                          <label>Title</label>
+                          <input
+                            value={mediaEditing.title}
+                            onChange={(e) => setMediaEditing({ ...mediaEditing, title: e.target.value })}
+                            placeholder="e.g. Cotton Delight"
+                          />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label>Subtitle / Description</label>
+                          <input
+                            value={mediaEditing.subtitle}
+                            onChange={(e) => setMediaEditing({ ...mediaEditing, subtitle: e.target.value })}
+                            placeholder="e.g. Small-batch dyed · 50g skein"
+                          />
+                        </div>
+                      </div>
+                      <div className="row" style={{ marginTop: 8 }}>
+                        <div>
+                          <label>Order</label>
+                          <input
+                            type="number"
+                            value={mediaEditing.order}
+                            onChange={(e) => setMediaEditing({ ...mediaEditing, order: Number(e.target.value) || 0 })}
+                            style={{ width: 80 }}
+                          />
+                        </div>
+                        <div>
+                          <label className="flex" style={{ gap: 6, marginTop: 22 }}>
+                            <input type="checkbox" style={{ width: "auto" }} checked={mediaEditing.active} onChange={(e) => setMediaEditing({ ...mediaEditing, active: e.target.checked })} />
+                            Visible
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex" style={{ marginTop: 14 }}>
+                    <button className="btn" onClick={saveMedia} disabled={mediaSaving}>
+                      {mediaSaving ? "Saving…" : "Save"}
+                    </button>
+                    <button className="btn ghost" onClick={() => setMediaEditing(null)}>Cancel</button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── Product Sections Tab ── */}
+      {tab === "sections" && (
+      <>
+      <div className="flex" style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <p className="muted" style={{ marginTop: -6 }}>
+          Build the website home layout. Drag order with ▲▼ — the top section shows first.
+        </p>
         <button className="btn" onClick={() => setEditing({ ...BLANK })}>+ Add Section</button>
       </div>
-      <p className="muted" style={{ marginTop: -6 }}>
-        Build the website home layout. Drag order with ▲▼ — the top section shows first.
-      </p>
 
       {/* Section list */}
       <div className="card">
@@ -283,6 +598,8 @@ export default function HomeLayout() {
             <button className="btn ghost" onClick={() => { setEditing(null); setSearch(""); setCatFilter(""); }}>Cancel</button>
           </div>
         </div>
+      )}
+      </>
       )}
     </>
   );
