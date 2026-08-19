@@ -39,6 +39,7 @@ button { font-family: inherit; cursor: pointer; }
 /* Cards / tables */
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
 .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
 .stat .n { font-size: 28px; font-weight: 800; }
 .stat .l { color: var(--muted); font-size: 13px; margin-top: 4px; }
