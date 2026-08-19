@@ -2,26 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, uploadImage } from "../api";
 
-// Ready-made yarn colour palette for the "pick many at once" picker.
-const PALETTE: { name: string; hex: string }[] = [
-  { name: "White", hex: "#f7f5f0" }, { name: "Off White", hex: "#efeae0" }, { name: "Cream", hex: "#f3e9d2" },
-  { name: "Beige", hex: "#d8c3a5" }, { name: "Ecru", hex: "#c9bda1" }, { name: "Light Grey", hex: "#c7cbcc" },
-  { name: "Melange Grey", hex: "#9aa3a3" }, { name: "Grey", hex: "#808585" }, { name: "Charcoal", hex: "#3f4446" },
-  { name: "Black", hex: "#1c1c1c" }, { name: "Chocolate", hex: "#5a3a24" }, { name: "Coffee", hex: "#6f4e37" },
-  { name: "Tan", hex: "#b08d57" }, { name: "Camel", hex: "#c19a6b" }, { name: "Mustard", hex: "#d4a017" },
-  { name: "Gold", hex: "#e0b100" }, { name: "Yellow", hex: "#f4d03f" }, { name: "Lemon", hex: "#eef3a0" },
-  { name: "Olive Green", hex: "#6b7a2f" }, { name: "Pista Green", hex: "#a7c957" }, { name: "Mint", hex: "#a8e6cf" },
-  { name: "Sea Green", hex: "#57b894" }, { name: "Emerald", hex: "#1f8a5b" }, { name: "Bottle Green", hex: "#14532d" },
-  { name: "Teal", hex: "#1f7a8c" }, { name: "Sky Blue", hex: "#8ecae6" }, { name: "Azure Blue", hex: "#3a86ff" },
-  { name: "Royal Blue", hex: "#1d3fb0" }, { name: "Navy Blue", hex: "#1b2a4a" }, { name: "Denim", hex: "#5a7fa3" },
-  { name: "Lavender", hex: "#b497d6" }, { name: "Purple", hex: "#6a2c8f" }, { name: "Wine", hex: "#722f37" },
-  { name: "Maroon", hex: "#7b1f2b" }, { name: "Cherry Red", hex: "#b3121f" }, { name: "Red", hex: "#e63946" },
-  { name: "Rust", hex: "#b7410e" }, { name: "Orange", hex: "#f4791f" }, { name: "Peach", hex: "#ffc3a0" },
-  { name: "Coral", hex: "#ff6f61" }, { name: "Rose", hex: "#e28ea0" }, { name: "Baby Pink", hex: "#f7cad0" },
-  { name: "Pink", hex: "#f072a9" }, { name: "Magenta", hex: "#c2185b" }, { name: "Fuchsia", hex: "#d81e78" },
-  { name: "Turquoise", hex: "#40c4b7" }, { name: "Aqua", hex: "#7fd8d8" }, { name: "Ivory", hex: "#fffff0" },
-];
-
 const empty = {
   title: "", description: "", short_description: "", tags: [] as string[], brand: "", category_id: "",
   mrp: 0, price: 0, discount_pct: 0, discount_on: "price",
