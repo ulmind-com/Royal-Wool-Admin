@@ -3,22 +3,23 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, revenue: 0 });
+  const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, revenue: 0, customers: 0 });
   const [lowStock, setLowStock] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
       try {
-        const [prods, cats, orders, low] = await Promise.all([
+        const [prods, cats, orders, low, users] = await Promise.all([
           api.get("/products?limit=100&admin=true"),
           api.get("/categories"),
           api.get("/orders/admin/all"),
           api.get("/products/admin/low-stock"),
+          api.get("/users/admin/count"),
         ]);
         const revenue = orders
           .filter((o: any) => o.status !== "cancelled")
           .reduce((s: number, o: any) => s + (o.amount || 0), 0);
-        setStats({ products: prods.length, categories: cats.length, orders: orders.length, revenue });
+        setStats({ products: prods.length, categories: cats.length, orders: orders.length, revenue, customers: users.count });
         setLowStock(low);
       } catch {}
     })();
@@ -135,7 +136,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid4">
+      <div className="grid5">
         {/* Products Card */}
         <div className="fatafati-card">
           <svg className="bg-pattern" width="100" height="100" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
@@ -175,6 +176,16 @@ export default function Dashboard() {
           <div className="stat-label">Revenue</div>
           <div className="stat-value">₹{stats.revenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
         </div>
+
+        {/* Customers Card */}
+        <Link to="/users" className="fatafati-card" style={{ textDecoration: "none" }}>
+          <svg className="bg-pattern" width="100" height="100" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <div className="icon-wrapper" style={{ background: "linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)", color: "#ec4899" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div className="stat-label">Customers Signed Up</div>
+          <div className="stat-value">{stats.customers}</div>
+        </Link>
       </div>
 
       <div className="fatafati-card" style={{ marginTop: 24, padding: "28px" }}>
