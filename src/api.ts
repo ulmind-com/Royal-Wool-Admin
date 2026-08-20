@@ -18,12 +18,43 @@ async function req<T = any>(path: string, method = "GET", body?: any): Promise<T
   return data as T;
 }
 
+/** Authenticated binary download (Excel/PDF/...) — `window.open`/`<a href>`
+ * can't attach the Bearer token, so this fetches the blob ourselves and
+ * saves it via a throwaway object URL + anchor click. Prefers the filename
+ * the server suggests (e.g. it bakes the exported date range in); `fallbackName`
+ * is only used if the server didn't send one. */
+async function download(path: string, fallbackName: string): Promise<void> {
+  const token = getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let detail = `Error ${res.status}`;
+    try { detail = JSON.parse(text)?.detail ? JSON.stringify(JSON.parse(text).detail) : detail; } catch { /* not JSON */ }
+    throw new Error(detail);
+  }
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match?.[1] || fallbackName;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   get: <T = any>(p: string) => req<T>(p),
   post: <T = any>(p: string, b?: any) => req<T>(p, "POST", b),
   put: <T = any>(p: string, b?: any) => req<T>(p, "PUT", b),
   patch: <T = any>(p: string, b?: any) => req<T>(p, "PATCH", b),
   del: <T = any>(p: string) => req<T>(p, "DELETE"),
+  download,
 };
 
 export async function uploadImage(file: File): Promise<string> {
