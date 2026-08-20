@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, revenue: 0, customers: 0 });
+  const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, revenue: 0, customers: 0, onlineNow: 0, newToday: 0 });
   const [lowStock, setLowStock] = useState<any[]>([]);
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    const load = async () => {
       try {
         const [prods, cats, orders, low, users] = await Promise.all([
           api.get("/products?limit=100&admin=true"),
@@ -16,13 +18,23 @@ export default function Dashboard() {
           api.get("/products/admin/low-stock"),
           api.get("/users/admin/count"),
         ]);
+        if (cancelled) return;
         const revenue = orders
           .filter((o: any) => o.status !== "cancelled")
           .reduce((s: number, o: any) => s + (o.amount || 0), 0);
-        setStats({ products: prods.length, categories: cats.length, orders: orders.length, revenue, customers: users.count });
+        setStats({
+          products: prods.length, categories: cats.length, orders: orders.length, revenue,
+          customers: users.count, onlineNow: users.online_now ?? 0, newToday: users.new_today ?? 0,
+        });
         setLowStock(low);
       } catch {}
-    })();
+    };
+
+    load();
+    // Keeps the whole dashboard — including Online Now / New Today — live
+    // while this page is open, without needing a manual refresh.
+    const interval = setInterval(load, 20000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   return (
@@ -127,6 +139,19 @@ export default function Dashboard() {
           transform: scale(2);
           pointer-events: none;
         }
+        .live-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #10b981;
+          box-shadow: 0 0 0 rgba(16, 185, 129, 0.6);
+          animation: live-pulse 2s infinite;
+        }
+        @keyframes live-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+          70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
       `}</style>
 
       <div className="dashboard-header">
@@ -186,6 +211,21 @@ export default function Dashboard() {
           <div className="stat-label">Customers Signed Up</div>
           <div className="stat-value">{stats.customers}</div>
         </Link>
+      </div>
+
+      <div className="fatafati-card" style={{ marginTop: 24, padding: "24px", display: "flex", gap: 32, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="live-dot" aria-hidden />
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>Live</span>
+        </div>
+        <div>
+          <div className="stat-label">🟢 Online Now</div>
+          <div className="stat-value" style={{ fontSize: 28 }}>{stats.onlineNow}</div>
+        </div>
+        <div>
+          <div className="stat-label">🆕 New Signups Today</div>
+          <div className="stat-value" style={{ fontSize: 28 }}>{stats.newToday}</div>
+        </div>
       </div>
 
       <div className="fatafati-card" style={{ marginTop: 24, padding: "28px" }}>

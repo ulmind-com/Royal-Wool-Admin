@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { fmtDateTime } from "../date";
 
 export default function Waitlist() {
   const [items, setItems] = useState<any[]>([]);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
 
   const load = () => {
     api.get<any[]>("/waitlist/admin/summary").then(setItems).catch(() => {});
@@ -122,7 +124,9 @@ export default function Waitlist() {
               {items.map((row) => {
                 const p = row.product;
                 const image = p.images?.[0];
+                const isOpen = open === p.id;
                 return (
+                  <>
                   <tr key={p.id}>
                     <td>
                       <div className="flex" style={{ alignItems: "center", gap: 16 }}>
@@ -140,18 +144,26 @@ export default function Waitlist() {
                       </div>
                     </td>
                     <td>
-                      <span style={{ 
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        background: "#fff7ed", color: "#ea580c", padding: "6px 12px", 
-                        borderRadius: 20, fontSize: 14, fontWeight: 700 
-                      }}>
+                      <button
+                        onClick={() => setOpen(isOpen ? null : p.id)}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          background: "#fff7ed", color: "#ea580c", padding: "6px 12px",
+                          borderRadius: 20, fontSize: 14, fontWeight: 700,
+                          border: "none", cursor: "pointer",
+                        }}
+                        title="Click to see who's waiting"
+                      >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         {row.count} waiting
-                      </span>
+                      </button>
                     </td>
                     <td style={{ textAlign: "right" }}>
-                      <button 
-                        className="btn ghost" 
+                      <button className="btn ghost sm" style={{ marginRight: 8 }} onClick={() => setOpen(isOpen ? null : p.id)}>
+                        {isOpen ? "Hide" : "View"}
+                      </button>
+                      <button
+                        className="btn ghost"
                         style={{ color: "#3b82f6", background: "#eff6ff" }}
                         onClick={() => resolve(p.id, p.title)}
                         disabled={busy}
@@ -161,6 +173,37 @@ export default function Waitlist() {
                       </button>
                     </td>
                   </tr>
+                  {isOpen && (
+                    <tr key={p.id + "-detail"}>
+                      <td colSpan={3} style={{ background: "#faf9f8" }}>
+                        <div style={{ padding: "6px 4px 14px" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Customer</th>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Phone</th>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Email</th>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Shade Waiting For</th>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Waiting Since</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(row.waiting || []).map((w: any, i: number) => (
+                                <tr key={i}>
+                                  <td style={{ padding: "8px 10px", fontWeight: 600, fontSize: 14 }}>{w.name}</td>
+                                  <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.phone || "—"}</td>
+                                  <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.email || "—"}</td>
+                                  <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.color_name || "Any shade"}</td>
+                                  <td style={{ padding: "8px 10px", fontSize: 14, color: "#64748b" }}>{fmtDateTime(w.waiting_since)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </>
                 );
               })}
             </tbody>
