@@ -20,10 +20,42 @@ export default function Orders() {
   const [bulkStatus, setBulkStatus] = useState("shipped");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [trackingModal, setTrackingModal] = useState<{ id: string, status: string } | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     setSelectedOrders(new Set());
   }, [orders]);
+
+  const dateStr = (d: Date) => d.toISOString().slice(0, 10);
+  const applyDatePreset = (daysBack: number) => {
+    const from = new Date();
+    from.setDate(from.getDate() - daysBack);
+    setStartDate(dateStr(from));
+    setEndDate(dateStr(new Date()));
+  };
+
+  const filterParams = () => {
+    const params = new URLSearchParams();
+    if (statusFilter !== "all") params.append("status", statusFilter);
+    if (search.trim()) params.append("q", search.trim());
+    if (startDate) params.append("start_date", new Date(startDate).toISOString());
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      params.append("end_date", end.toISOString());
+    }
+    return params;
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await api.download(`/orders/admin/export?${filterParams().toString()}`, "Orders_Royal_Wool.xlsx");
+    } catch (e: any) {
+      alert(e.message || "Export failed");
+    }
+    setExporting(false);
+  };
 
   const handleBulkApply = async () => {
     if (selectedOrders.size === 0) return;
@@ -45,16 +77,7 @@ export default function Orders() {
   const loadCounts = () => api.get("/orders/admin/status-counts").then(setCounts).catch(() => {});
 
   const load = () => {
-    const params = new URLSearchParams();
-    if (statusFilter !== "all") params.append("status", statusFilter);
-    if (search.trim()) params.append("q", search.trim());
-    if (startDate) params.append("start_date", new Date(startDate).toISOString());
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      params.append("end_date", end.toISOString());
-    }
-    api.get(`/orders/admin/all?${params.toString()}`).then(setOrders).catch(() => {});
+    api.get(`/orders/admin/all?${filterParams().toString()}`).then(setOrders).catch(() => {});
   };
 
   useEffect(() => { loadCounts(); }, []);
@@ -161,13 +184,30 @@ export default function Orders() {
             style={{ padding: "8px 12px", borderRadius: 6, border: "1px solid #cbd5e1" }}
           />
         </div>
-        <div style={{ alignSelf: "flex-end" }}>
-          <button 
-            className="btn ghost" 
+        <div>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 4 }}>Quick Range</label>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button className="btn ghost sm" onClick={() => applyDatePreset(0)}>Today</button>
+            <button className="btn ghost sm" onClick={() => applyDatePreset(2)}>2 Days</button>
+            <button className="btn ghost sm" onClick={() => applyDatePreset(7)}>7 Days</button>
+          </div>
+        </div>
+        <div style={{ alignSelf: "flex-end", display: "flex", gap: 8 }}>
+          <button
+            className="btn ghost"
             onClick={() => { setSearch(""); setStartDate(""); setEndDate(""); }}
             style={{ height: 37 }}
           >
             Clear Filters
+          </button>
+          <button
+            className="btn"
+            onClick={handleExport}
+            disabled={exporting}
+            title="Download the orders currently shown (matching Search/Status/Date filters) as an Excel file"
+            style={{ height: 37 }}
+          >
+            {exporting ? "Exporting…" : "⬇️ Export to Excel"}
           </button>
         </div>
       </div>
