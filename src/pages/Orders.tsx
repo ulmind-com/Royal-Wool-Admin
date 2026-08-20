@@ -1,10 +1,70 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { API_URL } from "../config";
 import PaymentInfo from "../components/PaymentInfo";
 import { fmtDate } from "../date";
+import {
+  IconBox, IconNew, IconProcessing, IconShipped, IconDelivery,
+  IconDelivered, IconCancelled, IconDownload, IconPrinter, IconWhatsApp,
+} from "../icons";
 
 const STAGES = ["placed", "confirmed", "shipped", "out_for_delivery", "delivered", "cancelled"];
 const label = (s: string) => s.replace(/_/g, " ");
+
+// WhatsApp number that order details are shared to (with country code, no +).
+// LIVE (client): 8910792214  ·  test was 8537861040.
+const SHARE_WHATSAPP = "918910792214";
+
+const absImg = (src?: string) => {
+  if (!src) return "";
+  return src.startsWith("http") ? src : `${API_URL}${src.startsWith("/") ? "" : "/"}${src}`;
+};
+
+const buildOrderMessage = (o: any) => {
+  const orderId = `#${o.id.slice(-6).toUpperCase()}`;
+  const addr = [o.address?.house, o.address?.area, o.address?.city, o.address?.state, o.address?.pincode]
+    .filter(Boolean).join(", ");
+  const lines: string[] = [];
+  lines.push("🧶 *Royaall Wool — Order Details*");
+  lines.push("");
+  lines.push(`*Order:* ${orderId}`);
+  lines.push(`*Date:* ${fmtDate(o.created_at)}`);
+  lines.push(`*Status:* ${label(o.status)}`);
+  lines.push("");
+  lines.push("👤 *Customer*");
+  lines.push(`Name: ${o.address?.name || "—"}`);
+  lines.push(`Phone: ${o.address?.phone || "—"}`);
+  lines.push("");
+  lines.push("📍 *Delivery Address*");
+  lines.push(addr || "—");
+  if (o.distance_km != null) lines.push(`Distance: ${o.distance_km} km`);
+  lines.push("");
+  lines.push(`🛒 *Items (${o.items?.length || 0})*`);
+  (o.items || []).forEach((it: any, i: number) => {
+    const variant = [it.color, it.size].filter(Boolean).join(" · ");
+    lines.push(`${i + 1}. ${it.title}${variant ? ` (${variant})` : ""}`);
+    lines.push(`   Product ID: ${it.product_id}`);
+    lines.push(`   Qty: ${it.qty} × ₹${it.price} = ₹${(it.price * it.qty).toFixed(2)}`);
+    const img = absImg(it.image);
+    if (img) lines.push(`   Image: ${img}`);
+  });
+  lines.push("");
+  lines.push("💰 *Bill*");
+  lines.push(`Subtotal: ₹${o.subtotal}`);
+  lines.push(`Discount: ₹${o.discount}`);
+  lines.push(`Delivery: ₹${o.delivery}`);
+  lines.push(`Tax: ₹${o.tax}`);
+  lines.push(`*Total: ₹${o.amount}*`);
+  lines.push("");
+  const paid = o.payment_method === "online" && o.razorpay_payment_id;
+  lines.push(`Payment: ${(o.payment_method || "—").toUpperCase()}${o.payment_method === "online" ? (paid ? " · PAID" : " · UNPAID") : ""}`);
+  return lines.join("\n");
+};
+
+const shareOrderToWhatsApp = (o: any) => {
+  const text = encodeURIComponent(buildOrderMessage(o));
+  window.open(`https://wa.me/${SHARE_WHATSAPP}?text=${text}`, "_blank");
+};
 
 export default function Orders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -111,13 +171,13 @@ export default function Orders() {
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, overflowX: "auto", paddingBottom: 4 }}>
         {[
-          { id: "all", label: "All Orders", icon: "📦" },
-          { id: "placed", label: "New", icon: "🔴" },
-          { id: "confirmed", label: "Processing", icon: "🟡" },
-          { id: "shipped", label: "Shipped", icon: "🔵" },
-          { id: "out_for_delivery", label: "Out for Delivery", icon: "🛵" },
-          { id: "delivered", label: "Delivered", icon: "✅" },
-          { id: "cancelled", label: "Cancelled", icon: "❌" },
+          { id: "all", label: "All Orders", icon: <IconBox /> },
+          { id: "placed", label: "New", icon: <IconNew /> },
+          { id: "confirmed", label: "Processing", icon: <IconProcessing /> },
+          { id: "shipped", label: "Shipped", icon: <IconShipped /> },
+          { id: "out_for_delivery", label: "Out for Delivery", icon: <IconDelivery /> },
+          { id: "delivered", label: "Delivered", icon: <IconDelivered /> },
+          { id: "cancelled", label: "Cancelled", icon: <IconCancelled /> },
         ].map(t => {
           const total = t.id === "all" ? Object.values(counts).reduce((a, b) => a + b, 0) : (counts[t.id] || 0);
           const active = statusFilter === t.id;
@@ -141,7 +201,7 @@ export default function Orders() {
                 transition: "all 0.2s"
               }}
             >
-              <span>{t.icon}</span> {t.label} 
+              <span style={{ display: "inline-flex", alignItems: "center" }}>{t.icon}</span> {t.label}
               <span style={{ 
                 background: active ? "rgba(255,255,255,0.2)" : "#f1f5f9", 
                 padding: "2px 8px", 
@@ -205,9 +265,9 @@ export default function Orders() {
             onClick={handleExport}
             disabled={exporting}
             title="Download the orders currently shown (matching Search/Status/Date filters) as an Excel file"
-            style={{ height: 37 }}
+            style={{ height: 37, display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {exporting ? "Exporting…" : "⬇️ Export to Excel"}
+            <IconDownload size={16} /> {exporting ? "Exporting…" : "Export to Excel"}
           </button>
         </div>
       </div>
@@ -260,7 +320,8 @@ export default function Orders() {
                   <td>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="btn ghost sm" onClick={() => setOpen(open === o.id ? null : o.id)}>{open === o.id ? "Hide" : "View"}</button>
-                      <button className="btn ghost sm" onClick={() => window.open(`/orders/${o.id}/invoice`, '_blank')} title="Print Invoice">🖨️</button>
+                      <button className="btn ghost sm" onClick={() => shareOrderToWhatsApp(o)} title="Share order on WhatsApp" style={{ color: "#25D366", display: "inline-flex", alignItems: "center", gap: 6 }}><IconWhatsApp size={16} /> Share</button>
+                      <button className="btn ghost sm" onClick={() => window.open(`/orders/${o.id}/invoice`, '_blank')} title="Print Invoice" style={{ display: "inline-flex", alignItems: "center" }}><IconPrinter size={16} /></button>
                     </div>
                   </td>
                 </tr>

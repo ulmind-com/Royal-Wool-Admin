@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api";
+import { API_URL } from "../config";
 import { fmtDate } from "../date";
+
+const absImg = (src?: string) => {
+  if (!src) return "";
+  return src.startsWith("http") ? src : `${API_URL}${src.startsWith("/") ? "" : "/"}${src}`;
+};
 
 export default function Invoice() {
   const { id } = useParams();
@@ -13,8 +19,20 @@ export default function Invoice() {
       .then(res => {
         setOrder(res);
         setLoading(false);
-        // Automatically trigger print dialogue when data is loaded
-        setTimeout(() => window.print(), 500);
+        // Wait for product images to finish loading before opening the print dialog,
+        // otherwise the PDF can render with blank/missing thumbnails.
+        setTimeout(() => {
+          let printed = false;
+          const doPrint = () => { if (!printed) { printed = true; window.print(); } };
+          const imgs = Array.from(document.querySelectorAll<HTMLImageElement>(".invoice-table img"));
+          const pending = imgs.filter(im => !im.complete);
+          if (pending.length === 0) { doPrint(); return; }
+          let done = 0;
+          const go = () => { if (++done >= pending.length) doPrint(); };
+          pending.forEach(im => { im.addEventListener("load", go); im.addEventListener("error", go); });
+          // Safety fallback in case some image never resolves.
+          setTimeout(doPrint, 3000);
+        }, 300);
       })
       .catch(() => setLoading(false));
   }, [id]);
@@ -32,6 +50,7 @@ export default function Invoice() {
             body { background: white; margin: 0; padding: 0; }
             .no-print { display: none !important; }
             .invoice-container { max-width: 100% !important; padding: 20px !important; }
+            .invoice-table img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             @page { margin: 0.5cm; }
           }
           .invoice-table { width: 100%; border-collapse: collapse; margin-top: 30px; margin-bottom: 30px; }
@@ -95,10 +114,26 @@ export default function Invoice() {
         </thead>
         <tbody>
           {order.gst?.items?.map((it: any, i: number) => {
+            const line = order.items?.[i] || {};
+            const img = absImg(line.image);
             return (
               <tr key={i}>
                 <td>
-                  <b>{it.title}</b>
+                  <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    {img && (
+                      <img
+                        src={img}
+                        alt={it.title}
+                        style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6, border: "1px solid #e2e8f0", flexShrink: 0 }}
+                      />
+                    )}
+                    <div style={{ lineHeight: 1.4 }}>
+                      <b>{it.title}</b>
+                      {line.color && <div style={{ fontSize: 13, color: "#334155" }}>Shade: {line.color}</div>}
+                      {line.size && <div style={{ fontSize: 13, color: "#334155" }}>Size: {line.size}</div>}
+                      {line.product_id && <div style={{ fontSize: 12, color: "#94a3b8" }}>ID: {line.product_id}</div>}
+                    </div>
+                  </div>
                 </td>
                 <td>{it.qty}</td>
                 <td>₹{it.rate ? it.rate.toFixed(2) : "0.00"}%</td>
