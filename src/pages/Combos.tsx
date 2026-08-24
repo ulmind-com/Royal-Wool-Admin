@@ -40,7 +40,10 @@ export default function Combos() {
   const save = async () => {
     setErr("");
     if (!f.name.trim()) { setErr("Combo name required"); return; }
-    if (f.rule_mode === "manual" && f.product_ids.length === 0) { setErr("Please select at least one product"); return; }
+    if (f.rule_mode === "manual" && f.product_ids.length < (Number(f.qty) || 0)) {
+      setErr(`Select at least ${Number(f.qty) || 0} eligible item(s) to match the Required Quantity — you've selected ${f.product_ids.length}.`);
+      return;
+    }
     if (f.rule_mode === "weight" && !f.weight_target) { setErr("Please enter a target weight"); return; }
     
     const body = {
@@ -210,7 +213,19 @@ export default function Combos() {
         ) : (
           <>
             <label style={{ marginTop: 16 }}>Select Eligible Products</label>
-            <p className="muted" style={{ marginTop: -4 }}>Pick the exact shades (or the whole product, for single-shade items) eligible for this combo.</p>
+            <p className="muted" style={{ marginTop: -4 }}>
+              Pick the exact shades (or the whole product, for single-shade items) eligible for this combo.
+              Select exactly {Number(f.qty) || 0} to make a <b>fixed bundle</b> (everything included, nothing to pick) —
+              select more to let customers <b>mix &amp; match</b> any {Number(f.qty) || 0} from your selection.
+            </p>
+            <p style={{
+              marginTop: 4, marginBottom: 12, fontSize: 13, fontWeight: 700,
+              color: f.product_ids.length >= (Number(f.qty) || 0) ? "#16a34a" : "#dc2626",
+            }}>
+              {f.product_ids.length >= (Number(f.qty) || 0)
+                ? `✓ ${f.product_ids.length} selected — customers will pick any ${Number(f.qty) || 0}${f.product_ids.length === (Number(f.qty) || 0) ? " (fixed bundle)" : ""}`
+                : `⚠ Select at least ${Number(f.qty) || 0} (currently ${f.product_ids.length}) — this combo can't trigger yet`}
+            </p>
 
             <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
               <input
