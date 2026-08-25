@@ -5,18 +5,21 @@ import { api } from "../api";
 export default function Dashboard() {
   const [stats, setStats] = useState({ products: 0, categories: 0, orders: 0, revenue: 0, customers: 0, onlineNow: 0, newToday: 0 });
   const [lowStock, setLowStock] = useState<any[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [showOnline, setShowOnline] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       try {
-        const [prods, cats, orders, low, users] = await Promise.all([
+        const [prods, cats, orders, low, users, online] = await Promise.all([
           api.get("/products?limit=100&admin=true"),
           api.get("/categories"),
           api.get("/orders/admin/all"),
           api.get("/products/admin/low-stock"),
           api.get("/users/admin/count"),
+          api.get("/users/admin/online"),
         ]);
         if (cancelled) return;
         const revenue = orders
@@ -27,6 +30,7 @@ export default function Dashboard() {
           customers: users.count, onlineNow: users.online_now ?? 0, newToday: users.new_today ?? 0,
         });
         setLowStock(low);
+        setOnlineUsers(online);
       } catch {}
     };
 
@@ -36,6 +40,9 @@ export default function Dashboard() {
     const interval = setInterval(load, 20000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
+
+  const initials = (name: string) =>
+    (name || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "?";
 
   return (
     <>
@@ -220,12 +227,52 @@ export default function Dashboard() {
         </div>
         <div>
           <div className="stat-label">🟢 Online Now</div>
-          <div className="stat-value" style={{ fontSize: 28 }}>{stats.onlineNow}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="stat-value" style={{ fontSize: 28 }}>{stats.onlineNow}</div>
+            {stats.onlineNow > 0 && (
+              <button
+                className="btn ghost sm"
+                onClick={() => setShowOnline((v) => !v)}
+                style={{ fontSize: 12 }}
+              >
+                {showOnline ? "Hide" : "Who?"}
+              </button>
+            )}
+          </div>
         </div>
         <div>
           <div className="stat-label">🆕 New Signups Today</div>
           <div className="stat-value" style={{ fontSize: 28 }}>{stats.newToday}</div>
         </div>
+
+        {showOnline && stats.onlineNow > 0 && (
+          <div style={{ width: "100%", marginTop: 4, paddingTop: 16, borderTop: "1px solid #f1f5f9", display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {onlineUsers.map((u) => (
+              <div
+                key={u.id}
+                title={u.email}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 30,
+                  padding: "6px 14px 6px 6px",
+                }}
+              >
+                {u.avatar ? (
+                  <img src={u.avatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+                ) : (
+                  <div style={{
+                    width: 28, height: 28, borderRadius: "50%", background: "#ec4899", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700,
+                  }}>
+                    {initials(u.name)}
+                  </div>
+                )}
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{u.name}</span>
+                <span className="live-dot" style={{ width: 7, height: 7 }} aria-hidden />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="fatafati-card" style={{ marginTop: 24, padding: "28px" }}>
