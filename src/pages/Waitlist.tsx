@@ -14,7 +14,7 @@ export default function Waitlist() {
   useEffect(() => { load(); }, []);
 
   const resolve = async (productId: string, title: string) => {
-    if (!confirm(`Mark "${title}" as restocked and clear the waitlist?`)) return;
+    if (!confirm(`Send a "back in stock" email to everyone waiting for "${title}" right now, and clear them from this list?\n\nRestocking a shade in Products already does this automatically — only use this if you need to notify them manually for some other reason.`)) return;
     setBusy(true);
     try {
       await api.post(`/waitlist/admin/${productId}/resolve`, {});
@@ -99,6 +99,9 @@ export default function Waitlist() {
         <div>
           <h1 className="dashboard-title">Restock Waitlist</h1>
           <p className="dashboard-subtitle">See which out-of-stock yarns your customers are waiting for the most.</p>
+          <p style={{ margin: "10px 0 0", fontSize: 13, color: "#16a34a", fontWeight: 600 }}>
+            ✓ Fully automatic — the moment you update a shade's stock in Products, everyone waiting for it is emailed and cleared from this list. No action needed here.
+          </p>
         </div>
       </div>
 
@@ -167,9 +170,10 @@ export default function Waitlist() {
                         style={{ color: "#3b82f6", background: "#eff6ff" }}
                         onClick={() => resolve(p.id, p.title)}
                         disabled={busy}
+                        title="Manual override — restocking this shade in Products already emails everyone automatically"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 6, verticalAlign: "text-bottom" }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                        Mark as Restocked
+                        Notify Manually
                       </button>
                     </td>
                   </tr>
@@ -184,6 +188,7 @@ export default function Waitlist() {
                                 <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Phone</th>
                                 <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Email</th>
                                 <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Shade Waiting For</th>
+                                <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>That Shade's Stock</th>
                                 <th style={{ textAlign: "left", padding: "6px 10px", fontSize: 12, color: "#64748b", textTransform: "uppercase" }}>Waiting Since</th>
                               </tr>
                             </thead>
@@ -194,6 +199,7 @@ export default function Waitlist() {
                                   <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.phone || "—"}</td>
                                   <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.email || "—"}</td>
                                   <td style={{ padding: "8px 10px", fontSize: 14 }}>{w.color_name || "Any shade"}</td>
+                                  <td style={{ padding: "8px 10px", fontSize: 14, fontWeight: 700, color: w.shade_stock > 0 ? "#10b981" : "#ef4444" }}>{w.shade_stock}</td>
                                   <td style={{ padding: "8px 10px", fontSize: 14, color: "#64748b" }}>{fmtDateTime(w.waiting_since)}</td>
                                 </tr>
                               ))}
