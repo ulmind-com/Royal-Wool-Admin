@@ -79,8 +79,24 @@ export default function Combos() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggle = async (c: any) => { await api.put(`/combos/${c.id}`, { ...c, active: !c.active }); load(); };
-  const del = async (id: string) => { if (confirm("Delete combo?")) { await api.del(`/combos/${id}`); if (editId === id) reset(); load(); } };
+  const toggle = async (c: any) => {
+    try {
+      await api.put(`/combos/${c.id}`, { ...c, active: !c.active });
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+  const del = async (id: string) => {
+    if (!confirm("Delete combo?")) return;
+    try {
+      await api.del(`/combos/${id}`);
+      if (editId === id) reset();
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
 
   const toggleProduct = (pid: string) => {
     const ids = f.product_ids.includes(pid)
