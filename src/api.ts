@@ -1,5 +1,14 @@
 import { API_URL } from "./config";
-import { getToken } from "./auth";
+import { getToken, logout } from "./auth";
+
+/** Force-logout on expired session: clear stored credentials, alert the admin,
+ *  and redirect to the login page so they can sign back in immediately. */
+function handleSessionExpired() {
+  logout();
+  // Use alert() rather than a toast — admin must acknowledge before proceeding.
+  alert("Your session has expired. Please log in again.");
+  window.location.href = "/login";
+}
 
 async function req<T = any>(path: string, method = "GET", body?: any): Promise<T> {
   const headers: Record<string, string> = {};
@@ -12,6 +21,10 @@ async function req<T = any>(path: string, method = "GET", body?: any): Promise<T
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+  if (res.status === 401) {
+    handleSessionExpired();
+    throw new Error("Session expired");
+  }
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
   if (!res.ok) throw new Error(data?.detail ? JSON.stringify(data.detail) : `Error ${res.status}`);
@@ -28,6 +41,10 @@ async function download(path: string, fallbackName: string): Promise<void> {
   const res = await fetch(`${API_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
+  if (res.status === 401) {
+    handleSessionExpired();
+    throw new Error("Session expired");
+  }
   if (!res.ok) {
     const text = await res.text();
     let detail = `Error ${res.status}`;
@@ -65,6 +82,10 @@ export async function uploadImage(file: File): Promise<string> {
     headers: { Authorization: `Bearer ${getToken()}` },
     body: form,
   });
+  if (res.status === 401) {
+    handleSessionExpired();
+    throw new Error("Session expired");
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data?.detail || "Upload failed");
   return data.url as string;
@@ -86,6 +107,10 @@ export async function uploadVideo(file: File): Promise<UploadedVideo> {
     headers: { Authorization: `Bearer ${getToken()}` },
     body: form,
   });
+  if (res.status === 401) {
+    handleSessionExpired();
+    throw new Error("Session expired");
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data?.detail || "Upload failed");
   return data as UploadedVideo;
